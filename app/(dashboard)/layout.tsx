@@ -7,6 +7,9 @@ const navItems = [
   { name: "Gastos", href: "/gastos" },
   { name: "Tarefas", href: "/tarefas" },
   { name: "Moradores", href: "/moradores" },
+  { name: "Eventos", href: "/eventos" },
+  { name: "Empréstimos", href: "/emprestimos" },
+  { name: "Tarefas avulsas", href: "/tarefas-avulsas" }
 ];
 
 export default function DashboardLayout({

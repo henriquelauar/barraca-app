@@ -74,7 +74,7 @@ export function AddGastoForm({ moradores }: { moradores: Morador[] }) {
             name="nome"
             type="text"
             required
-            placeholder="Ex.: Mercado da semana"
+            placeholder="Ex.: Uber Formatura X"
             className="border-slate-300 focus-visible:ring-emerald-500"
           />
         </div>
@@ -118,7 +118,7 @@ export function AddGastoForm({ moradores }: { moradores: Morador[] }) {
             id="categoria"
             name="categoria"
             type="text"
-            placeholder="Ex.: mercado"
+            placeholder="Ex.: Uber"
             className="border-slate-300 focus-visible:ring-emerald-500"
           />
         </div>

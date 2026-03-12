@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatCard } from "@/components/ui/stat-card";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { GastosPageActions } from "@/components/gastos/gastos-modals";
 import {
   listarGastos,
   listarMoradoresAtivosParaGastos,
@@ -98,136 +99,9 @@ export default async function GastosPage() {
     <div className="space-y-6">
       <PageHeader
         title="Gastos"
-        description="Registre despesas, acompanhe saldos, visualize quem deve para quem e controle as quitações da Barraca Armada."
+        description="Controle de despesas, pagamentos e saldos da casa."
+        action={<GastosPageActions moradores={moradores} />}
       />
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Total em gastos"
-          value={formatarMoeda(total)}
-          helper="Soma de todos os gastos registrados"
-        />
-        <StatCard
-          title="Pagamentos registrados"
-          value={formatarMoeda(totalPagamentos)}
-          helper="Transferências já lançadas"
-        />
-        <StatCard
-          title="Credores"
-          value={maioresCredores}
-          helper="Moradores com saldo positivo"
-        />
-        <StatCard
-          title="Devedores"
-          value={maioresDevedores}
-          helper="Moradores com saldo negativo"
-        />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <SectionCard
-          title="Adicionar gasto"
-          description="Cadastre uma nova despesa e escolha quem pagou e para quem ela se aplica."
-        >
-          <div className="module-bar-green mb-5" />
-          <AddGastoForm moradores={moradores} />
-        </SectionCard>
-
-        <SectionCard
-          title="Registrar pagamento"
-          description="Lance quitações entre moradores para ajustar os saldos."
-        >
-          <div className="module-bar-green mb-5" />
-          <AddPagamentoForm moradores={moradores} />
-        </SectionCard>
-      </div>
-
-      <SectionCard
-        title="Resumo de saldos"
-        description="Visão consolidada do que cada morador pagou, deve e do saldo atual."
-      >
-        {resumoSaldos.length === 0 ? (
-          <div className="empty-state">Nenhum saldo disponível ainda.</div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {resumoSaldos.map((item) => (
-              <div
-                key={item.morador_id}
-                className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm"
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="font-semibold text-slate-900">{item.nome}</p>
-                  <StatusBadge variant={getSaldoVariant(item.saldo) as any}>
-                    {item.saldo > 0
-                      ? "A receber"
-                      : item.saldo < 0
-                      ? "Devendo"
-                      : "Quitado"}
-                  </StatusBadge>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">Pagou</span>
-                    <span className="font-medium text-slate-900">
-                      {formatarMoeda(item.total_pago)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">Deve</span>
-                    <span className="font-medium text-slate-900">
-                      {formatarMoeda(item.total_devido)}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
-                    <span className="font-medium text-slate-700">Saldo</span>
-                    <span
-                      className={`font-semibold ${
-                        item.saldo > 0
-                          ? "text-emerald-600"
-                          : item.saldo < 0
-                          ? "text-rose-600"
-                          : "text-slate-700"
-                      }`}
-                    >
-                      {formatarMoeda(item.saldo)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
-
-      <SectionCard
-        title="Quem deve para quem"
-        description="Encontro de contas simplificado para facilitar as quitações."
-      >
-        {transferencias.length === 0 ? (
-          <div className="empty-state">Ninguém deve nada no momento.</div>
-        ) : (
-          <div className="space-y-3">
-            {transferencias.map((item, index) => (
-              <div
-                key={`${item.de_morador_id}-${item.para_morador_id}-${index}`}
-                className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4"
-              >
-                <div className="text-sm text-slate-700">
-                  <strong>{item.de_nome}</strong> deve{" "}
-                  <strong>{formatarMoeda(item.valor)}</strong> para{" "}
-                  <strong>{item.para_nome}</strong>
-                </div>
-
-                <StatusBadge variant="warning">Pendente</StatusBadge>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
-
       <SectionCard
         title={`Lista de gastos (${gastos.length})`}
         description="Todos os gastos registrados com informações de pagador, destino e valor."
@@ -290,7 +164,7 @@ export default async function GastosPage() {
                         <td className="text-right">
                           <form action={removerGastoAction}>
                             <input type="hidden" name="id" value={gasto.id} />
-                            <Button type="submit" variant="destructive" size="sm">
+                            <Button type="submit" size="sm">
                               Remover
                             </Button>
                           </form>
@@ -301,6 +175,92 @@ export default async function GastosPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Quem deve para quem"
+        description="Encontro de contas simplificado para facilitar as quitações."
+      >
+        {transferencias.length === 0 ? (
+          <div className="empty-state">Ninguém deve nada no momento.</div>
+        ) : (
+          <div className="space-y-3">
+            {transferencias.map((item, index) => (
+              <div
+                key={`${item.de_morador_id}-${item.para_morador_id}-${index}`}
+                className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4"
+              >
+                <div className="text-sm text-slate-700">
+                  <strong>{item.de_nome}</strong> deve{" "}
+                  <strong>{formatarMoeda(item.valor)}</strong> para{" "}
+                  <strong>{item.para_nome}</strong>
+                </div>
+
+                <StatusBadge variant="warning">Pendente</StatusBadge>
+              </div>
+            ))}
+          </div>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Resumo de saldos"
+        description="Visão consolidada do que cada morador pagou, deve e do saldo atual."
+      >
+        {resumoSaldos.length === 0 ? (
+          <div className="empty-state">Nenhum saldo disponível ainda.</div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {resumoSaldos.map((item) => (
+              <div
+                key={item.morador_id}
+                className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm"
+              >
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <p className="font-semibold text-slate-900">{item.nome}</p>
+                  <StatusBadge variant={getSaldoVariant(item.saldo) as any}>
+                    {item.saldo > 0
+                      ? "A receber"
+                      : item.saldo < 0
+                      ? "Devendo"
+                      : "Quitado"}
+                  </StatusBadge>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">Pagou</span>
+                    <span className="font-medium text-slate-900">
+                      {formatarMoeda(item.total_pago)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">Deve</span>
+                    <span className="font-medium text-slate-900">
+                      {formatarMoeda(item.total_devido)}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
+                    <span className="font-medium text-slate-700">Saldo</span>
+                    <span
+                      className={`font-semibold ${
+                        item.saldo > 0
+                          ? "text-emerald-600"
+                          : item.saldo < 0
+                          ? "text-rose-600"
+                          : "text-slate-700"
+                      }`}
+                    >
+                      {formatarMoeda(item.saldo)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </SectionCard>
