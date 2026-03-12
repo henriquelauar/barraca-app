@@ -199,18 +199,20 @@ function MobileTaskBlock({
 export default async function TarefasPage({
   searchParams,
 }: {
-  searchParams?: { ciclo?: string; semana?: string };
+  searchParams?: Promise<{ ciclo?: string; semana?: string }>;
 }) {
+  const params = (await searchParams) ?? {};
+
   const [grupos, resumo, execucoes, ciclos] = await Promise.all([
     listarTarefasPorCategoria(),
-    listarResumoSemana(searchParams?.semana),
-    listarExecucoesDaSemana(searchParams?.semana),
+    listarResumoSemana(params.semana),
+    listarExecucoesDaSemana(params.semana),
     listarCiclosRotativos(),
   ]);
 
   const cicloAtual =
-    searchParams?.ciclo && ciclos.includes(searchParams.ciclo)
-      ? searchParams.ciclo
+    params.ciclo && ciclos.includes(params.ciclo)
+      ? params.ciclo
       : ciclos[0] || "";
 
   const escalaRotativa = cicloAtual
@@ -280,7 +282,35 @@ export default async function TarefasPage({
       <PageHeader
         title="Tarefas"
         description="Visual semanal das atividades da casa, tarefas rotativas, pets e horários. Agora com foco em leitura rápida, contraste e uso no celular."
+        action={
+          <div className="w-full md:w-auto">
+            <CicloSelector ciclos={ciclos} cicloAtual={cicloAtual} />
+          </div>
+        }
       />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Semana"
+          value={formatarPeriodoSemana(resumo.inicioSemana, resumo.fimSemana)}
+          helper="Período exibido no painel"
+        />
+        <StatCard
+          title="Tarefas hoje"
+          value={tarefasHojeCount}
+          helper={`Referência de hoje: ${formatarData(resumo.hoje)}`}
+        />
+        <StatCard
+          title="Concluídas"
+          value={concluidasSemana}
+          helper={`${pendentesSemana} pendentes na semana`}
+        />
+        <StatCard
+          title="Não feitas"
+          value={naoFeitasSemana}
+          helper="Use esse número para atacar os gargalos da rotina"
+        />
+      </div>
 
       <SemanaSelector
         inicioSemana={resumo.inicioSemana}
@@ -365,11 +395,6 @@ export default async function TarefasPage({
       <SectionCard
         title="Escala rotativa"
         description="Distribuição atual do ciclo rotativo da casa."
-        action={
-          <div className="w-full md:w-auto">
-            <CicloSelector ciclos={ciclos} cicloAtual={cicloAtual} />
-          </div>
-        }
       >
         {ciclos.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">

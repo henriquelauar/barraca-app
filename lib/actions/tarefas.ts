@@ -10,6 +10,62 @@ export type TarefaExecucaoState =
     }
   | null;
 
+type TarefaRelacionada =
+  | {
+      id?: string;
+      nome?: string;
+      categoria?: string | null;
+    }
+  | {
+      id?: string;
+      nome?: string;
+      categoria?: string | null;
+    }[]
+  | null
+  | undefined;
+
+type MoradorRelacionado =
+  | {
+      id?: string;
+      nome?: string;
+    }
+  | {
+      id?: string;
+      nome?: string;
+    }[]
+  | null
+  | undefined;
+
+type ExecucaoRelacionada =
+  | {
+      id: string;
+      status: "pendente" | "concluida" | "nao_feita";
+      data_referencia: string;
+      semana_inicio: string;
+      concluido_em?: string | null;
+    }
+  | {
+      id: string;
+      status: "pendente" | "concluida" | "nao_feita";
+      data_referencia: string;
+      semana_inicio: string;
+      concluido_em?: string | null;
+    }[]
+  | null
+  | undefined;
+
+type TarefaAtribuicaoItem = {
+  id: string;
+  ciclo?: string | null;
+  dia_semana?: number | null;
+  hora_inicio?: string | null;
+  hora_fim?: string | null;
+  observacao?: string | null;
+  tarefa?: TarefaRelacionada;
+  morador?: MoradorRelacionado;
+  execucao?: ExecucaoRelacionada;
+};
+
 async function getAuthenticatedUser() {
   const supabase = await createClient();
   const {
@@ -59,6 +115,15 @@ function getFimSemana(date = getHojeDate()) {
   return fim;
 }
 
+function getSingleTarefa(tarefa?: TarefaRelacionada) {
+  if (!tarefa) return null;
+  return Array.isArray(tarefa) ? tarefa[0] ?? null : tarefa;
+}
+
+function getTarefaCategoria(tarefa?: TarefaRelacionada) {
+  return getSingleTarefa(tarefa)?.categoria ?? null;
+}
+
 export async function listarResumoSemanaAtual() {
   const hoje = getHojeDate();
   const inicioSemana = getInicioSemana(hoje);
@@ -73,132 +138,128 @@ export async function listarResumoSemanaAtual() {
 }
 
 export async function listarCiclosRotativos() {
-    const { supabase, user } = await getAuthenticatedUser();
-  
-    if (!user) return [];
-  
-    const { data, error } = await supabase
-      .from("tarefa_atribuicoes")
-      .select("ciclo, tarefa:tarefas(categoria)")
-      .not("ciclo", "is", null);
-  
-    if (error) {
-      console.error("Erro ao listar ciclos rotativos:", error);
-      return [];
-    }
-  
-    const ciclos = (data ?? [])
-      .filter(
-        (item) =>
-          item.ciclo &&
-          !Array.isArray(item.tarefa) &&
-          item.tarefa?.categoria === "rotativa_semanal"
-      )
-      .map((item) => item.ciclo as string);
-  
-    return Array.from(new Set(ciclos));
-  }
-  
-  export async function listarEscalaRotativaPorCiclo(ciclo: string) {
-    const { supabase, user } = await getAuthenticatedUser();
-  
-    if (!user || !ciclo) return [];
-  
-    const { data, error } = await supabase
-      .from("tarefa_atribuicoes")
-      .select(`
-        id,
-        ciclo,
-        observacao,
-        tarefa:tarefas (
-          id,
-          nome,
-          categoria
-        ),
-        morador:moradores (
-          id,
-          nome
-        )
-      `)
-      .eq("ciclo", ciclo);
-  
-    if (error) {
-      console.error("Erro ao listar escala rotativa por ciclo:", error);
-      return [];
-    }
-  
-    return (data ?? []).filter(
-      (item) =>
-        !Array.isArray(item.tarefa) &&
-        item.tarefa?.categoria === "rotativa_semanal"
-    );
+  const { supabase, user } = await getAuthenticatedUser();
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("tarefa_atribuicoes")
+    .select("ciclo, tarefa:tarefas(categoria)")
+    .not("ciclo", "is", null);
+
+  if (error) {
+    console.error("Erro ao listar ciclos rotativos:", error);
+    return [];
   }
 
-  function parseISODate(value: string) {
-    const date = new Date(`${value}T00:00:00`);
-    date.setHours(0, 0, 0, 0);
-    return date;
-  }
-  
-  function addDays(date: Date, amount: number) {
-    const copy = new Date(date);
-    copy.setDate(copy.getDate() + amount);
-    copy.setHours(0, 0, 0, 0);
-    return copy;
-  }
-  
-  export async function listarResumoSemana(semanaInicioParam?: string) {
-    const inicioBase = semanaInicioParam
-      ? parseISODate(semanaInicioParam)
-      : getInicioSemana();
-  
-    const inicioSemana = getInicioSemana(inicioBase);
-    const fimSemana = addDays(inicioSemana, 6);
-    const hoje = getHojeDate();
-  
-    return {
-      hoje: toISODate(hoje),
-      inicioSemana: toISODate(inicioSemana),
-      fimSemana: toISODate(fimSemana),
-      anteriorSemana: toISODate(addDays(inicioSemana, -7)),
-      proximaSemana: toISODate(addDays(inicioSemana, 7)),
-      semanaAtualInicio: toISODate(getInicioSemana()),
-    };
-  }
-  
-  export async function listarExecucoesDaSemana(semanaInicioParam?: string) {
-    const { supabase, user } = await getAuthenticatedUser();
-  
-    if (!user) return [];
-  
-    const semanaInicio = semanaInicioParam
-      ? toISODate(getInicioSemana(parseISODate(semanaInicioParam)))
-      : toISODate(getInicioSemana());
-  
-    const { data, error } = await supabase
-      .from("tarefa_execucoes")
-      .select(`
+  const items = (data ?? []) as TarefaAtribuicaoItem[];
+
+  const ciclos = items
+    .filter(
+      (item) =>
+        item.ciclo && getTarefaCategoria(item.tarefa) === "rotativa_semanal"
+    )
+    .map((item) => item.ciclo as string);
+
+  return Array.from(new Set(ciclos));
+}
+
+export async function listarEscalaRotativaPorCiclo(ciclo: string) {
+  const { supabase, user } = await getAuthenticatedUser();
+  if (!user || !ciclo) return [];
+
+  const { data, error } = await supabase
+    .from("tarefa_atribuicoes")
+    .select(`
+      id,
+      ciclo,
+      observacao,
+      tarefa:tarefas (
         id,
-        atribuicao_id,
-        status,
-        data_referencia,
-        semana_inicio,
-        concluido_em,
-        concluido_por
-      `)
-      .eq("semana_inicio", semanaInicio);
-  
-    if (error) {
-      console.error("Erro ao listar execuções da semana:", error);
-      return [];
-    }
-  
-    return data ?? [];
+        nome,
+        categoria
+      ),
+      morador:moradores (
+        id,
+        nome
+      )
+    `)
+    .eq("ciclo", ciclo);
+
+  if (error) {
+    console.error("Erro ao listar escala rotativa por ciclo:", error);
+    return [];
   }
+
+  const items = (data ?? []) as TarefaAtribuicaoItem[];
+
+  return items.filter(
+    (item) => getTarefaCategoria(item.tarefa) === "rotativa_semanal"
+  );
+}
+
+function parseISODate(value: string) {
+  const date = new Date(`${value}T00:00:00`);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+function addDays(date: Date, amount: number) {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + amount);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+export async function listarResumoSemana(semanaInicioParam?: string) {
+  const inicioBase = semanaInicioParam
+    ? parseISODate(semanaInicioParam)
+    : getInicioSemana();
+
+  const inicioSemana = getInicioSemana(inicioBase);
+  const fimSemana = addDays(inicioSemana, 6);
+  const hoje = getHojeDate();
+
+  return {
+    hoje: toISODate(hoje),
+    inicioSemana: toISODate(inicioSemana),
+    fimSemana: toISODate(fimSemana),
+    anteriorSemana: toISODate(addDays(inicioSemana, -7)),
+    proximaSemana: toISODate(addDays(inicioSemana, 7)),
+    semanaAtualInicio: toISODate(getInicioSemana()),
+  };
+}
+
+export async function listarExecucoesDaSemana(semanaInicioParam?: string) {
+  const { supabase, user } = await getAuthenticatedUser();
+  if (!user) return [];
+
+  const semanaInicio = semanaInicioParam
+    ? toISODate(getInicioSemana(parseISODate(semanaInicioParam)))
+    : toISODate(getInicioSemana());
+
+  const { data, error } = await supabase
+    .from("tarefa_execucoes")
+    .select(`
+      id,
+      atribuicao_id,
+      status,
+      data_referencia,
+      semana_inicio,
+      concluido_em,
+      concluido_por
+    `)
+    .eq("semana_inicio", semanaInicio);
+
+  if (error) {
+    console.error("Erro ao listar execuções da semana:", error);
+    return [];
+  }
+
+  return data ?? [];
+}
 
 export async function listarTarefasHoje() {
   const { supabase, user } = await getAuthenticatedUser();
-
   if (!user) return [];
 
   const hoje = getHojeISO();
@@ -238,15 +299,18 @@ export async function listarTarefasHoje() {
     return [];
   }
 
-  return (data ?? []).map((item) => {
+  const items = (data ?? []) as TarefaAtribuicaoItem[];
+
+  return items.map((item) => {
     const execucoes = Array.isArray(item.execucao) ? item.execucao : [];
-    const execucaoHoje = execucoes.find(
-      (e) => e.data_referencia === hoje && e.semana_inicio === semanaInicio
-    );
+    const execucaoHoje =
+      execucoes.find(
+        (e) => e.data_referencia === hoje && e.semana_inicio === semanaInicio
+      ) ?? null;
 
     return {
       ...item,
-      execucao_hoje: execucaoHoje ?? null,
+      execucao_hoje: execucaoHoje,
     };
   });
 }
@@ -297,40 +361,29 @@ export async function listarTarefasPorCategoria() {
     };
   }
 
-  const items = data ?? [];
+  const items = (data ?? []) as TarefaAtribuicaoItem[];
 
   return {
     rotativas: items.filter(
-      (item) =>
-        !Array.isArray(item.tarefa) &&
-        item.tarefa?.categoria === "rotativa_semanal"
+      (item) => getTarefaCategoria(item.tarefa) === "rotativa_semanal"
     ),
     fixas: items.filter(
-      (item) =>
-        !Array.isArray(item.tarefa) &&
-        item.tarefa?.categoria === "fixa_dia_semana"
+      (item) => getTarefaCategoria(item.tarefa) === "fixa_dia_semana"
     ),
     pets: items.filter(
-      (item) =>
-        !Array.isArray(item.tarefa) &&
-        item.tarefa?.categoria === "rotina_pet"
+      (item) => getTarefaCategoria(item.tarefa) === "rotina_pet"
     ),
     horarios: items.filter(
-      (item) =>
-        !Array.isArray(item.tarefa) &&
-        item.tarefa?.categoria === "faixa_horario"
+      (item) => getTarefaCategoria(item.tarefa) === "faixa_horario"
     ),
     mensais: items.filter(
-      (item) =>
-        !Array.isArray(item.tarefa) &&
-        item.tarefa?.categoria === "mensal"
+      (item) => getTarefaCategoria(item.tarefa) === "mensal"
     ),
   };
 }
 
 export async function listarExecucoesDaSemanaAtual() {
   const { supabase, user } = await getAuthenticatedUser();
-
   if (!user) return [];
 
   const semanaInicio = toISODate(getInicioSemana());
@@ -408,7 +461,7 @@ export async function marcarTarefaStatus(
   if (error) {
     return { error: error.message };
   }
-  
+
   revalidatePath("/tarefas");
   return { success: "Status da tarefa atualizado." };
 }

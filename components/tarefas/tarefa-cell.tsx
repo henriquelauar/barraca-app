@@ -1,6 +1,7 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { marcarTarefaStatus } from "@/lib/actions/tarefas";
 import { StatusBadge } from "@/components/ui/status-badge";
 
@@ -62,7 +63,7 @@ export function TarefaCell({
   statusAtual: Status;
   horario?: string | null;
 }) {
-  const [, formAction] = useFormState(marcarTarefaStatus, null);
+  const [, formAction] = useActionState(marcarTarefaStatus, null);
 
   return (
     <form
