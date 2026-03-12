@@ -3,68 +3,81 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
-export async function signIn(formData: FormData) {
+export type AuthState = {
+  error?: string;
+  success?: string;
+} | null;
+
+export async function signIn(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
   const supabase = await createClient();
 
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get("password") || "");
 
   if (!email || !password) {
-    return { error: "E-mail e senha são obrigatórios" };
+    return { error: "E-mail e senha são obrigatórios." };
   }
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
   if (error) {
-    return { error: error.message };
+    return { error: "E-mail ou senha inválidos." };
   }
 
   redirect("/dashboard");
 }
 
-export async function signUp(formData: FormData) {
+export async function signUp(
+  _prevState: AuthState,
+  formData: FormData
+): Promise<AuthState> {
   const supabase = await createClient();
 
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const nome = formData.get("nome") as string;
-  const nomeRepublica = formData.get("nome_republica") as string;
+  const nome = String(formData.get("nome") || "").trim();
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
+  const password = String(formData.get("password") || "");
 
-  if (!email || !password || !nome) {
-    return { error: "E-mail, senha e nome são obrigatórios" };
+  if (!nome || !email || !password) {
+    return { error: "Nome, e-mail e senha são obrigatórios." };
   }
 
-  const { data: authData, error: authError } = await supabase.auth.signUp({
+  const { data, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
   });
 
-  if (authError) {
-    return { error: authError.message };
+  if (signUpError) {
+    return { error: signUpError.message };
   }
 
-  if (!authData.user) {
-    return { error: "Erro ao criar conta" };
+  if (!data.user) {
+    return { error: "Não foi possível criar o usuário." };
   }
 
-  // Sempre criar república e vincular morador (nome da república ou padrão)
-  const nomeRepublicaFinal = nomeRepublica?.trim() || `República de ${nome.trim()}`;
-  const { data: republica, error: repError } = await supabase
-    .from("republicas")
-    .insert({ nome: nomeRepublicaFinal })
-    .select("id")
-    .single();
+  const { error: moradorError } = await supabase.from("moradores").insert({
+    user_id: data.user.id,
+    nome,
+    email,
+    ativo: true,
+  });
 
-  if (!repError && republica) {
-    await supabase.from("moradores").insert({
-      user_id: authData.user.id,
-      republica_id: republica.id,
-      nome: nome.trim(),
-      email,
-    });
+  if (moradorError) {
+    return {
+      error: `Usuário criado, mas houve erro ao cadastrar morador: ${moradorError.message}`,
+    };
   }
 
-  redirect("/login?message=Conta criada! Verifique seu e-mail para confirmar.");
+  redirect("/login?message=Conta criada com sucesso");
 }
 
 export async function signOut() {

@@ -2,34 +2,234 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground: #0f172a;
-  --background: #f8fafc;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --border: #e2e8f0;
-  --ring: #3b82f6;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --foreground: #f8fafc;
-    --background: #0f172a;
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-    --border: #334155;
+    --background: 248 250 252;
+    --foreground: 15 23 42;
+
+    --card: 255 255 255;
+    --card-foreground: 15 23 42;
+
+    --popover: 255 255 255;
+    --popover-foreground: 15 23 42;
+
+    --primary: 37 99 235;
+    --primary-foreground: 255 255 255;
+
+    --secondary: 241 245 249;
+    --secondary-foreground: 15 23 42;
+
+    --muted: 241 245 249;
+    --muted-foreground: 100 116 139;
+
+    --accent: 239 246 255;
+    --accent-foreground: 30 64 175;
+
+    --destructive: 225 29 72;
+    --destructive-foreground: 255 255 255;
+
+    --border: 226 232 240;
+    --input: 226 232 240;
+    --ring: 59 130 246;
+
+    --radius: 1rem;
+  }
+
+  * {
+    @apply border-slate-200;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    background-image:
+      radial-gradient(circle at top left, rgba(59, 130, 246, 0.06), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.04), transparent 24%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-blue-100 text-blue-900;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-slate-900;
+  }
+
+  p {
+    @apply text-slate-600;
+  }
+
+  a {
+    @apply transition-colors;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    @apply outline-none;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply border-slate-300 bg-white text-slate-900 placeholder:text-slate-400;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    @apply ring-2 ring-blue-500/20 border-blue-500;
+  }
+
+  table {
+    @apply w-full border-collapse;
+  }
+
+  th {
+    @apply text-slate-500;
+  }
+
+  td {
+    @apply text-slate-700;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
+@layer components {
+  .app-shell {
+    @apply min-h-screen bg-slate-50 text-slate-900;
+  }
+
+  .page-container {
+    @apply mx-auto w-full max-w-7xl space-y-6;
+  }
+
+  .page-section {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .page-section-header {
+    @apply flex flex-col gap-2 border-b border-slate-100 px-6 py-5 md:flex-row md:items-center md:justify-between;
+  }
+
+  .page-section-body {
+    @apply px-6 py-5;
+  }
+
+  .soft-card {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  }
+
+  .soft-card-hover {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md;
+  }
+
+  .subtle-grid {
+    @apply grid gap-4;
+  }
+
+  .data-table-wrapper {
+    @apply overflow-hidden rounded-xl border border-slate-200 bg-white;
+  }
+
+  .data-table {
+    @apply min-w-full divide-y divide-slate-200;
+  }
+
+  .data-table thead {
+    @apply bg-slate-50;
+  }
+
+  .data-table th {
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500;
+  }
+
+  .data-table td {
+    @apply px-4 py-4 align-middle text-sm text-slate-700;
+  }
+
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-slate-50;
+  }
+
+  .empty-state {
+    @apply rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500;
+  }
+
+  .form-grid {
+    @apply grid gap-4 md:grid-cols-2;
+  }
+
+  .form-field {
+    @apply space-y-2;
+  }
+
+  .form-label {
+    @apply text-sm font-medium text-slate-700;
+  }
+
+  .alert-error {
+    @apply rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700;
+  }
+
+  .alert-success {
+    @apply rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700;
+  }
+
+  .module-bar-blue {
+    @apply h-1 rounded-full bg-blue-500;
+  }
+
+  .module-bar-green {
+    @apply h-1 rounded-full bg-emerald-500;
+  }
+
+  .module-bar-violet {
+    @apply h-1 rounded-full bg-violet-500;
+  }
+
+  .module-bar-amber {
+    @apply h-1 rounded-full bg-amber-500;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(148 163 184) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(148 163 184);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(100 116 139);
   }
 }

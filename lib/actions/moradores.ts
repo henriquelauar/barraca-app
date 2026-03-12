@@ -1,27 +1,40 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+
+export type MoradorFormState =
+  | {
+      error?: string;
+      success?: string;
+    }
+  | null;
+
+async function getAuthenticatedUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return { supabase, user: null };
+  }
+
+  return { supabase, user };
+}
 
 export async function listarMoradores() {
-  const supabase = await createClient();
+  const { supabase, user } = await getAuthenticatedUser();
 
-  // Busca a república do usuário logado
-  const { data: moradorAtual } = await supabase
-    .from("moradores")
-    .select("republica_id")
-    .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-    .single();
-
-  if (!moradorAtual?.republica_id) {
+  if (!user) {
     return [];
   }
 
   const { data, error } = await supabase
     .from("moradores")
-    .select("*")
-    .eq("republica_id", moradorAtual.republica_id)
-    .order("nome");
+    .select("id, user_id, nome, email, ativo, criado_em")
+    .order("nome", { ascending: true });
 
   if (error) {
     console.error("Erro ao listar moradores:", error);
@@ -31,64 +44,70 @@ export async function listarMoradores() {
   return data ?? [];
 }
 
-export async function adicionarMorador(formData: FormData) {
-  const supabase = await createClient();
+export async function adicionarMorador(
+  _prevState: MoradorFormState,
+  formData: FormData
+): Promise<MoradorFormState> {
+  const { supabase, user } = await getAuthenticatedUser();
 
-  const nome = formData.get("nome") as string;
-  const email = formData.get("email") as string;
-
-  if (!nome?.trim() || !email?.trim()) {
-    return { error: "Nome e e-mail são obrigatórios" };
+  if (!user) {
+    return { error: "Usuário não autenticado." };
   }
 
-  const { data: moradorAtual } = await supabase
-    .from("moradores")
-    .select("republica_id")
-    .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-    .single();
+  const nome = String(formData.get("nome") || "").trim();
+  const email = String(formData.get("email") || "")
+    .trim()
+    .toLowerCase();
 
-  if (!moradorAtual?.republica_id) {
-    return { error: "Você precisa estar em uma república" };
+  if (!nome || !email) {
+    return { error: "Nome e e-mail são obrigatórios." };
   }
 
   const { error } = await supabase.from("moradores").insert({
-    republica_id: moradorAtual.republica_id,
-    nome: nome.trim(),
-    email: email.trim().toLowerCase(),
+    nome,
+    email,
+    ativo: true,
   });
 
   if (error) {
     if (error.code === "23505") {
-      return { error: "Já existe um morador com este e-mail na república" };
+      return { error: "Já existe um morador com este e-mail." };
     }
+
     return { error: error.message };
   }
 
   revalidatePath("/moradores");
-  return { success: true };
+  return { success: "Morador adicionado com sucesso." };
 }
 
 export async function removerMorador(id: string) {
-  const supabase = await createClient();
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const { supabase, user } = await getAuthenticatedUser();
 
-  const { data: morador } = await supabase
+  if (!user) {
+    return { error: "Usuário não autenticado." };
+  }
+
+  const { data: morador, error: buscarError } = await supabase
     .from("moradores")
-    .select("republica_id, user_id")
+    .select("id, user_id, nome")
     .eq("id", id)
     .single();
 
-  if (!morador) return { error: "Morador não encontrado" };
+  if (buscarError || !morador) {
+    return { error: "Morador não encontrado." };
+  }
 
-  // Não pode remover a si mesmo
-  if (morador.user_id === userId) {
-    return { error: "Você não pode remover a si mesmo" };
+  if (morador.user_id === user.id) {
+    return { error: "Você não pode remover a si mesmo." };
   }
 
   const { error } = await supabase.from("moradores").delete().eq("id", id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    return { error: error.message };
+  }
 
   revalidatePath("/moradores");
-  return { success: true };
+  return { success: "Morador removido com sucesso." };
 }

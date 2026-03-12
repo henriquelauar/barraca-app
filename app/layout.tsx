@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Barraca - Administração da República",
-  description: "Gerencie gastos, tarefas e mais na sua república",
+  title: "Barraca | Barraca Armada",
+  description: "Gestão de moradores, gastos, pagamentos e tarefas da Barraca Armada",
 };
 
 export default function RootLayout({
