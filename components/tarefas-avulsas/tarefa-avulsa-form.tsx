@@ -7,6 +7,8 @@ import {
   criarTarefaAvulsa,
   MoradorResumo,
 } from "@/lib/actions/tarefas-avulsas";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 const INITIAL_STATE: ActionState = null;
 
@@ -14,19 +16,28 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-    >
+    <Button type="submit" size="lg" fullWidth disabled={pending}>
       {pending ? "Salvando..." : "Criar tarefa"}
-    </button>
+    </Button>
   );
 }
 
 function FieldError({ errors }: { errors?: string[] }) {
   if (!errors || errors.length === 0) return null;
-  return <p className="mt-1 text-sm text-rose-600">{errors[0]}</p>;
+
+  return (
+    <p className="text-sm font-medium text-rose-300">
+      {errors[0]}
+    </p>
+  );
+}
+
+function hoje() {
+  const now = new Date();
+  const ano = now.getFullYear();
+  const mes = String(now.getMonth() + 1).padStart(2, "0");
+  const dia = String(now.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
 }
 
 type TarefaAvulsaFormProps = {
@@ -34,7 +45,7 @@ type TarefaAvulsaFormProps = {
 };
 
 export function TarefaAvulsaForm({ moradores }: TarefaAvulsaFormProps) {
-  const formRef = useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [state, formAction] = useFormState(criarTarefaAvulsa, INITIAL_STATE);
 
   useEffect(() => {
@@ -43,57 +54,54 @@ export function TarefaAvulsaForm({ moradores }: TarefaAvulsaFormProps) {
     }
   }, [state]);
 
-  const hoje = new Date().toISOString().slice(0, 10);
-
   return (
     <form ref={formRef} action={formAction} className="space-y-5">
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="md:col-span-2">
-          <label
-            htmlFor="titulo"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-          >
+      {state?.message ? (
+        <div
+          className={`rounded-2xl border p-4 text-sm ${
+            state.success
+              ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+              : "border-rose-500/20 bg-rose-500/10 text-rose-300"
+          }`}
+        >
+          {state.message}
+        </div>
+      ) : null}
+
+      <div className="grid gap-5 md:grid-cols-2">
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Nome da tarefa *
           </label>
-          <input
-            id="titulo"
+          <Input
             name="titulo"
-            type="text"
-            placeholder="Ex.: Consertar chuveiro"
-            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            placeholder="Ex.: Comprar lâmpada da cozinha"
+            required
           />
           <FieldError errors={state?.errors?.titulo} />
         </div>
 
-        <div>
-          <label
-            htmlFor="data_limite"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-          >
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Data limite *
           </label>
-          <input
-            id="data_limite"
+          <Input
             name="data_limite"
             type="date"
-            defaultValue={hoje}
-            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            defaultValue={hoje()}
+            required
           />
           <FieldError errors={state?.errors?.data_limite} />
         </div>
 
-        <div>
-          <label
-            htmlFor="responsavel_morador_id"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-          >
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Responsável
           </label>
           <select
-            id="responsavel_morador_id"
             name="responsavel_morador_id"
             defaultValue=""
-            className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
           >
             <option value="">Sem responsável</option>
             {moradores.map((morador) => (
@@ -102,40 +110,24 @@ export function TarefaAvulsaForm({ moradores }: TarefaAvulsaFormProps) {
               </option>
             ))}
           </select>
+          <FieldError errors={state?.errors?.responsavel_morador_id} />
         </div>
 
-        <div className="md:col-span-2">
-          <label
-            htmlFor="descricao"
-            className="mb-1.5 block text-sm font-medium text-slate-700"
-          >
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Descrição
           </label>
           <textarea
-            id="descricao"
             name="descricao"
             rows={4}
-            placeholder="Detalhes da tarefa"
-            className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            placeholder="Detalhes adicionais da tarefa"
+            className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
           />
+          <FieldError errors={state?.errors?.descricao} />
         </div>
       </div>
 
-      {state?.message ? (
-        <div
-          className={`rounded-xl px-4 py-3 text-sm ${
-            state.success
-              ? "border border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border border-rose-200 bg-rose-50 text-rose-700"
-          }`}
-        >
-          {state.message}
-        </div>
-      ) : null}
-
-      <div className="flex items-center justify-end">
-        <SubmitButton />
-      </div>
+      <SubmitButton />
     </form>
   );
 }

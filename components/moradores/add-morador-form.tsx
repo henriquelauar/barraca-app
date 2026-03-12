@@ -2,7 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { adicionarMorador } from "@/lib/actions/moradores";
+import {
+  adicionarMorador,
+  type MoradorFormState,
+} from "@/lib/actions/moradores";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -10,15 +13,17 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" disabled={pending} className="w-full md:w-auto">
+    <Button type="submit" size="lg" fullWidth disabled={pending}>
       {pending ? "Adicionando..." : "Adicionar morador"}
     </Button>
   );
 }
 
+const initialState: MoradorFormState = null;
+
 export function AddMoradorForm() {
-  const [state, formAction] = useFormState(adicionarMorador, null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [state, formAction] = useFormState(adicionarMorador, initialState);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   useEffect(() => {
     if (state?.success) {
@@ -29,43 +34,30 @@ export function AddMoradorForm() {
   return (
     <form ref={formRef} action={formAction} className="space-y-5">
       {state?.error ? (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
           {state.error}
         </div>
       ) : null}
 
       {state?.success ? (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
           {state.success}
         </div>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-5 md:grid-cols-2">
         <div className="space-y-2">
-          <label htmlFor="nome" className="text-sm font-medium text-slate-700">
-            Nome
-          </label>
-          <Input
-            id="nome"
-            name="nome"
-            type="text"
-            required
-            placeholder="Ex.: João Bobo"
-            className="border-slate-300 focus-visible:ring-blue-500"
-          />
+          <label className="text-sm font-semibold text-zinc-200">Nome</label>
+          <Input name="nome" placeholder="Nome do morador" required />
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="email" className="text-sm font-medium text-slate-700">
-            E-mail
-          </label>
+          <label className="text-sm font-semibold text-zinc-200">E-mail</label>
           <Input
-            id="email"
             name="email"
             type="email"
+            placeholder="email@exemplo.com"
             required
-            placeholder="nome@exemplo.com"
-            className="border-slate-300 focus-visible:ring-blue-500"
           />
         </div>
       </div>

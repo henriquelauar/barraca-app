@@ -1,6 +1,3 @@
-import { AddGastoForm } from "@/components/gastos/add-gasto-form";
-import { AddPagamentoForm } from "@/components/gastos/add-pagamento-form";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { SectionCard } from "@/components/ui/section-card";
 import { StatCard } from "@/components/ui/stat-card";
@@ -15,6 +12,61 @@ import {
   removerGasto,
   removerPagamento,
 } from "@/lib/actions/gastos";
+
+type RelacaoMorador =
+  | {
+      id: string;
+      nome: string;
+    }
+  | {
+      id: string;
+      nome: string;
+    }[]
+  | null
+  | undefined;
+
+type DestinoGasto = {
+  id?: string;
+  tipo_destino: "casa" | "morador";
+  morador?: RelacaoMorador;
+  morador_id?: string | null;
+};
+
+type Gasto = {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  valor_total: number | string;
+  categoria: string | null;
+  data_gasto: string;
+  pagador?: RelacaoMorador;
+  destinos?: DestinoGasto[];
+};
+
+type Pagamento = {
+  id: string;
+  valor: number | string;
+  data_pagamento: string;
+  observacao: string | null;
+  de_morador?: RelacaoMorador;
+  para_morador?: RelacaoMorador;
+};
+
+type ResumoSaldo = {
+  morador_id: string;
+  nome: string;
+  total_pago: number;
+  total_devido: number;
+  saldo: number;
+};
+
+type TransferenciaResumo = {
+  de_morador_id: string;
+  de_nome: string;
+  para_morador_id: string;
+  para_nome: string;
+  valor: number;
+};
 
 function formatarMoeda(valor: number | string) {
   const numero = typeof valor === "number" ? valor : Number(valor);
@@ -31,32 +83,28 @@ function formatarData(data: string) {
   }).format(new Date(data));
 }
 
-function formatarDestino(
-  destinos: Array<{
-    tipo_destino: "casa" | "morador";
-    morador?: { nome: string } | { nome: string }[] | null;
-  }>
-) {
-  if (!destinos?.length) return "Sem destino";
+function extrairMorador(relacao?: RelacaoMorador) {
+  if (!relacao) return null;
+  return Array.isArray(relacao) ? relacao[0] ?? null : relacao;
+}
+
+function formatarDestino(destinos: DestinoGasto[] = []) {
+  if (!destinos.length) return "Sem destino";
 
   const temCasa = destinos.some((destino) => destino.tipo_destino === "casa");
   if (temCasa) return "Casa";
 
   const nomes = destinos
-    .map((destino) => {
-      const morador = destino.morador;
-      if (Array.isArray(morador)) return morador[0]?.nome;
-      return morador?.nome;
-    })
-    .filter(Boolean);
+    .map((destino) => extrairMorador(destino.morador)?.nome)
+    .filter((nome): nome is string => Boolean(nome));
 
-  return nomes.join(", ");
+  return nomes.length > 0 ? nomes.join(", ") : "Sem destino";
 }
 
 function getSaldoVariant(valor: number) {
-  if (valor > 0) return "success";
-  if (valor < 0) return "danger";
-  return "neutral";
+  if (valor > 0) return "success" as const;
+  if (valor < 0) return "danger" as const;
+  return "neutral" as const;
 }
 
 async function removerGastoAction(formData: FormData) {
@@ -64,7 +112,6 @@ async function removerGastoAction(formData: FormData) {
 
   const id = String(formData.get("id") || "");
   if (!id) return;
-
   await removerGasto(id);
 }
 
@@ -73,12 +120,11 @@ async function removerPagamentoAction(formData: FormData) {
 
   const id = String(formData.get("id") || "");
   if (!id) return;
-
   await removerPagamento(id);
 }
 
 export default async function GastosPage() {
-  const [gastos, moradores, pagamentos, resumoSaldos, transferencias] =
+  const [gastosRaw, moradores, pagamentosRaw, resumoSaldosRaw, transferenciasRaw] =
     await Promise.all([
       listarGastos(),
       listarMoradoresAtivosParaGastos(),
@@ -87,31 +133,41 @@ export default async function GastosPage() {
       listarTransferenciasResumo(),
     ]);
 
+  const gastos = (gastosRaw ?? []) as Gasto[];
+  const pagamentos = (pagamentosRaw ?? []) as Pagamento[];
+  const resumoSaldos = (resumoSaldosRaw ?? []) as ResumoSaldo[];
+  const transferencias = (transferenciasRaw ?? []) as TransferenciaResumo[];
+
   const total = gastos.reduce((acc, gasto) => acc + Number(gasto.valor_total), 0);
+
   const totalPagamentos = pagamentos.reduce(
     (acc, pagamento) => acc + Number(pagamento.valor),
     0
   );
+
   const maioresCredores = resumoSaldos.filter((item) => item.saldo > 0).length;
   const maioresDevedores = resumoSaldos.filter((item) => item.saldo < 0).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       <PageHeader
         title="Gastos"
-        description="Controle de despesas, pagamentos e saldos da casa."
+        description="Controle financeiro da casa com visão de despesas, pagamentos, saldos e transferências pendentes."
         action={<GastosPageActions moradores={moradores} />}
       />
+
       <SectionCard
-        title={`Lista de gastos (${gastos.length})`}
-        description="Todos os gastos registrados com informações de pagador, destino e valor."
+        title="Gastos lançados"
+        description="No desktop você tem tabela. No celular, leitura em cards."
       >
         {gastos.length === 0 ? (
-          <div className="empty-state">Nenhum gasto cadastrado ainda.</div>
+          <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
+            Nenhum gasto cadastrado ainda.
+          </div>
         ) : (
-          <div className="data-table-wrapper">
-            <div className="overflow-x-auto">
-              <table className="data-table">
+          <>
+            <div className="hidden xl:block overflow-x-auto">
+              <table className="table-dark min-w-[1100px]">
                 <thead>
                   <tr>
                     <th>Gasto</th>
@@ -119,54 +175,40 @@ export default async function GastosPage() {
                     <th>Data</th>
                     <th>Quem pagou</th>
                     <th>Destino</th>
-                    <th className="text-right">Valor</th>
-                    <th className="text-right">Ações</th>
+                    <th>Valor</th>
+                    <th>Ações</th>
                   </tr>
                 </thead>
-
                 <tbody>
                   {gastos.map((gasto) => {
-                    const pagador = Array.isArray(gasto.pagador)
-                      ? gasto.pagador[0]
-                      : gasto.pagador;
+                    const pagador = extrairMorador(gasto.pagador);
 
                     return (
                       <tr key={gasto.id}>
-                        <td>
-                          <div>
-                            <p className="font-medium text-slate-900">
-                              {gasto.nome}
-                            </p>
+                        <td className="min-w-[260px]">
+                          <div className="space-y-1">
+                            <p className="font-semibold text-white">{gasto.nome}</p>
                             {gasto.descricao ? (
-                              <p className="mt-1 text-xs text-slate-500">
-                                {gasto.descricao}
-                              </p>
+                              <p className="text-sm text-zinc-500">{gasto.descricao}</p>
                             ) : null}
                           </div>
                         </td>
-
-                        <td>
-                          <StatusBadge variant="info">
-                            {gasto.categoria || "Sem categoria"}
-                          </StatusBadge>
-                        </td>
-
+                        <td>{gasto.categoria || "Sem categoria"}</td>
                         <td>{formatarData(gasto.data_gasto)}</td>
-
                         <td>{pagador?.nome || "Não informado"}</td>
-
-                        <td>{formatarDestino(gasto.destinos || [])}</td>
-
-                        <td className="text-right font-semibold text-slate-900">
+                        <td>{formatarDestino(gasto.destinos)}</td>
+                        <td className="font-semibold text-white">
                           {formatarMoeda(gasto.valor_total)}
                         </td>
-
-                        <td className="text-right">
+                        <td>
                           <form action={removerGastoAction}>
                             <input type="hidden" name="id" value={gasto.id} />
-                            <Button type="submit" size="sm">
+                            <button
+                              type="submit"
+                              className="inline-flex h-9 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 text-sm font-semibold text-rose-300 hover:bg-rose-500/20"
+                            >
                               Remover
-                            </Button>
+                            </button>
                           </form>
                         </td>
                       </tr>
@@ -175,152 +217,255 @@ export default async function GastosPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+
+            <div className="space-y-4 xl:hidden">
+              {gastos.map((gasto) => {
+                const pagador = extrairMorador(gasto.pagador);
+
+                return (
+                  <div
+                    key={gasto.id}
+                    className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-2">
+                        <h3 className="text-base font-semibold text-white">
+                          {gasto.nome}
+                        </h3>
+                        {gasto.descricao ? (
+                          <p className="text-sm leading-6 text-zinc-500">
+                            {gasto.descricao}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      <p className="text-base font-bold text-white">
+                        {formatarMoeda(gasto.valor_total)}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                          Categoria
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-200">
+                          {gasto.categoria || "Sem categoria"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                          Data
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-200">
+                          {formatarData(gasto.data_gasto)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                          Quem pagou
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-200">
+                          {pagador?.nome || "Não informado"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                          Destino
+                        </p>
+                        <p className="mt-1 text-sm text-zinc-200">
+                          {formatarDestino(gasto.destinos)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <form action={removerGastoAction}>
+                        <input type="hidden" name="id" value={gasto.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex h-10 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 text-sm font-semibold text-rose-300 hover:bg-rose-500/20"
+                        >
+                          Remover
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </SectionCard>
 
-      <SectionCard
-        title="Quem deve para quem"
-        description="Encontro de contas simplificado para facilitar as quitações."
-      >
-        {transferencias.length === 0 ? (
-          <div className="empty-state">Ninguém deve nada no momento.</div>
-        ) : (
-          <div className="space-y-3">
-            {transferencias.map((item, index) => (
-              <div
-                key={`${item.de_morador_id}-${item.para_morador_id}-${index}`}
-                className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-4"
-              >
-                <div className="text-sm text-slate-700">
-                  <strong>{item.de_nome}</strong> deve{" "}
-                  <strong>{formatarMoeda(item.valor)}</strong> para{" "}
-                  <strong>{item.para_nome}</strong>
-                </div>
-
-                <StatusBadge variant="warning">Pendente</StatusBadge>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
-
-      <SectionCard
-        title="Resumo de saldos"
-        description="Visão consolidada do que cada morador pagou, deve e do saldo atual."
-      >
-        {resumoSaldos.length === 0 ? (
-          <div className="empty-state">Nenhum saldo disponível ainda.</div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {resumoSaldos.map((item) => (
-              <div
-                key={item.morador_id}
-                className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm"
-              >
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <p className="font-semibold text-slate-900">{item.nome}</p>
-                  <StatusBadge variant={getSaldoVariant(item.saldo) as any}>
-                    {item.saldo > 0
-                      ? "A receber"
-                      : item.saldo < 0
-                      ? "Devendo"
-                      : "Quitado"}
-                  </StatusBadge>
-                </div>
-
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">Pagou</span>
-                    <span className="font-medium text-slate-900">
-                      {formatarMoeda(item.total_pago)}
-                    </span>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <SectionCard
+          title="Quem deve para quem"
+          description="Resumo direto das transferências pendentes."
+        >
+          {transferencias.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
+              Ninguém deve nada no momento.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {transferencias.map((item, index) => (
+                <div
+                  key={`${item.de_nome}-${item.para_nome}-${index}`}
+                  className="flex flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 md:flex-row md:items-center md:justify-between"
+                >
+                  <div className="space-y-1">
+                    <p className="text-sm text-zinc-300">
+                      <span className="font-semibold text-white">{item.de_nome}</span>{" "}
+                      deve{" "}
+                      <span className="font-semibold text-white">
+                        {formatarMoeda(item.valor)}
+                      </span>{" "}
+                      para{" "}
+                      <span className="font-semibold text-white">{item.para_nome}</span>
+                    </p>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">Deve</span>
-                    <span className="font-medium text-slate-900">
-                      {formatarMoeda(item.total_devido)}
-                    </span>
-                  </div>
+                  <StatusBadge variant="warning">Pendente</StatusBadge>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
 
-                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
-                    <span className="font-medium text-slate-700">Saldo</span>
-                    <span
-                      className={`font-semibold ${
+        <SectionCard
+          title="Resumo de saldos"
+          description="Quem está a receber, devendo ou quitado."
+        >
+          {resumoSaldos.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
+              Nenhum saldo disponível ainda.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {resumoSaldos.map((item) => (
+                <div
+                  key={item.morador_id}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
+                >
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-2">
+                      <h3 className="text-base font-semibold text-white">{item.nome}</h3>
+                      <div className="flex flex-wrap gap-2">
+                        <StatusBadge variant={getSaldoVariant(item.saldo)}>
+                          {item.saldo > 0
+                            ? "A receber"
+                            : item.saldo < 0
+                            ? "Devendo"
+                            : "Quitado"}
+                        </StatusBadge>
+                      </div>
+                    </div>
+
+                    <p
+                      className={`text-lg font-bold ${
                         item.saldo > 0
-                          ? "text-emerald-600"
+                          ? "text-emerald-300"
                           : item.saldo < 0
-                          ? "text-rose-600"
-                          : "text-slate-700"
+                          ? "text-rose-300"
+                          : "text-zinc-200"
                       }`}
                     >
                       {formatarMoeda(item.saldo)}
-                    </span>
+                    </p>
+                  </div>
+
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3">
+                      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                        Pagou
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-zinc-100">
+                        {formatarMoeda(item.total_pago)}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-3">
+                      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                        Deve
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-zinc-100">
+                        {formatarMoeda(item.total_devido)}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+      </div>
 
       <SectionCard
-        title={`Histórico de pagamentos (${pagamentos.length})`}
-        description="Pagamentos já registrados entre moradores."
+        title="Pagamentos registrados"
+        description="Transferências entre moradores já lançadas no sistema."
       >
         {pagamentos.length === 0 ? (
-          <div className="empty-state">
+          <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
             Nenhum pagamento registrado ainda.
           </div>
         ) : (
-          <div className="data-table-wrapper">
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Quem pagou</th>
-                    <th>Quem recebeu</th>
-                    <th>Data</th>
-                    <th>Observação</th>
-                    <th className="text-right">Valor</th>
-                    <th className="text-right">Ações</th>
-                  </tr>
-                </thead>
+          <div className="space-y-4">
+            {pagamentos.map((pagamento) => {
+              const deMorador = extrairMorador(pagamento.de_morador);
+              const paraMorador = extrairMorador(pagamento.para_morador);
 
-                <tbody>
-                  {pagamentos.map((pagamento) => {
-                    const deMorador = Array.isArray(pagamento.de_morador)
-                      ? pagamento.de_morador[0]
-                      : pagamento.de_morador;
+              return (
+                <div
+                  key={pagamento.id}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
+                >
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-2">
+                      <h3 className="text-base font-semibold text-white">
+                        {deMorador?.nome || "Não informado"} →{" "}
+                        {paraMorador?.nome || "Não informado"}
+                      </h3>
 
-                    const paraMorador = Array.isArray(pagamento.para_morador)
-                      ? pagamento.para_morador[0]
-                      : pagamento.para_morador;
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        <p className="text-sm text-zinc-400">
+                          <span className="text-zinc-500">Valor:</span>{" "}
+                          <span className="font-semibold text-white">
+                            {formatarMoeda(pagamento.valor)}
+                          </span>
+                        </p>
 
-                    return (
-                      <tr key={pagamento.id}>
-                        <td>{deMorador?.nome || "Morador"}</td>
-                        <td>{paraMorador?.nome || "Morador"}</td>
-                        <td>{formatarData(pagamento.data_pagamento)}</td>
-                        <td>{pagamento.observacao || "—"}</td>
-                        <td className="text-right font-semibold text-slate-900">
-                          {formatarMoeda(pagamento.valor)}
-                        </td>
-                        <td className="text-right">
-                          <form action={removerPagamentoAction}>
-                            <input type="hidden" name="id" value={pagamento.id} />
-                            <Button type="submit" variant="destructive" size="sm">
-                              Remover
-                            </Button>
-                          </form>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        <p className="text-sm text-zinc-400">
+                          <span className="text-zinc-500">Data:</span>{" "}
+                          <span className="text-zinc-200">
+                            {formatarData(pagamento.data_pagamento)}
+                          </span>
+                        </p>
+                      </div>
+
+                      {pagamento.observacao ? (
+                        <p className="text-sm leading-6 text-zinc-500">
+                          {pagamento.observacao}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <form action={removerPagamentoAction}>
+                      <input type="hidden" name="id" value={pagamento.id} />
+                      <button
+                        type="submit"
+                        className="inline-flex h-10 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 text-sm font-semibold text-rose-300 hover:bg-rose-500/20"
+                      >
+                        Remover
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </SectionCard>

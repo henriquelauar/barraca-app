@@ -6,5 +6,6 @@ export default async function LoginPage({
   searchParams: Promise<{ message?: string }>;
 }) {
   const params = await searchParams;
-  return <LoginForm message={params.message} />;
+
+  return <LoginForm message={params?.message} />;
 }

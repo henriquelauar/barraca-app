@@ -5,10 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export type EventoTipo =
   | "social"
-  | "manutencao"
+  | "formatura"
   | "reuniao"
-  | "financeiro"
-  | "limpeza"
+  | "escolha"
+  | "almoco"
   | "aniversario"
   | "outro";
 
@@ -72,10 +72,10 @@ export type EventosPageData = {
 
 const TIPOS_VALIDOS: EventoTipo[] = [
   "social",
-  "manutencao",
+  "formatura",
   "reuniao",
-  "financeiro",
-  "limpeza",
+  "escolha",
+  "almoco",
   "aniversario",
   "outro",
 ];

@@ -134,10 +134,7 @@ function getEmprestimoTipoVariant(tipo: Emprestimo["tipo"]) {
   return tipo === "emprestei" ? ("info" as const) : ("warning" as const);
 }
 
-function getPresencasResumo(
-  eventoId: string,
-  presencas: EventoPresenca[]
-) {
+function getPresencasResumo(eventoId: string, presencas: EventoPresenca[]) {
   return presencas
     .filter((item) => item.evento_id === eventoId)
     .reduce(
@@ -149,7 +146,7 @@ function getPresencasResumo(
     );
 }
 
-export default async function Page() {
+export default async function DashboardPage() {
   const supabase = await createClient();
   const hoje = startOfToday();
 
@@ -160,18 +157,17 @@ export default async function Page() {
     tarefasResult,
     emprestimosResult,
   ] = await Promise.all([
-    supabase.from("moradores").select("id, nome, ativo").order("nome", {
-      ascending: true,
-    }),
+    supabase
+      .from("moradores")
+      .select("id, nome, ativo")
+      .order("nome", { ascending: true }),
     supabase
       .from("eventos")
       .select("id, titulo, tipo, data_inicio, local")
       .gte("data_inicio", hoje.toISOString())
       .order("data_inicio", { ascending: true })
       .limit(5),
-    supabase
-      .from("evento_presencas")
-      .select("evento_id, status"),
+    supabase.from("evento_presencas").select("evento_id, status"),
     supabase
       .from("tarefas_avulsas")
       .select("id, titulo, descricao, data_limite, status, responsavel_morador_id")
@@ -196,6 +192,7 @@ export default async function Page() {
     const limite = new Date(`${item.data_limite}T00:00:00`);
     return limite.getTime() < hoje.getTime();
   });
+
   const tarefasEmAndamento = tarefas.filter(
     (item) => item.status === "em_andamento"
   );
@@ -210,13 +207,13 @@ export default async function Page() {
   });
 
   const precisaAtencao = [
-    ...(tarefasVencidas.slice(0, 3).map((item) => ({
+    ...tarefasVencidas.slice(0, 3).map((item) => ({
       id: item.id,
       tipo: "tarefa_vencida" as const,
       titulo: item.titulo,
       detalhe: `Prazo em ${formatDate(item.data_limite)}`,
-    }))),
-    ...(eventosHoje.slice(0, 2).map((item) => ({
+    })),
+    ...eventosHoje.slice(0, 2).map((item) => ({
       id: item.id,
       tipo: "evento_hoje" as const,
       titulo: item.titulo,
@@ -224,89 +221,85 @@ export default async function Page() {
         hour: "2-digit",
         minute: "2-digit",
       }).format(new Date(item.data_inicio))}`,
-    }))),
-    ...(emprestimos.slice(0, 2).map((item) => ({
+    })),
+    ...emprestimos.slice(0, 2).map((item) => ({
       id: item.id,
       tipo: "emprestimo_aberto" as const,
       titulo: item.nome_item,
       detalhe: `${getEmprestimoTipoLabel(item.tipo)} • ${item.pessoa_nome}`,
-    }))),
+    })),
   ].slice(0, 6);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       <PageHeader
         title="Dashboard"
-        description="Resumo geral da Barraca Armada com o que merece atenção agora."
+        description="Resumo geral da casa com foco no que precisa de atenção, próximos eventos, tarefas em aberto e empréstimos pendentes."
       />
 
-      <SectionCard
-        title="Precisa de atenção"
-        description="Atalhos mentais do que está pendente ou vencido."
-      >
-        {precisaAtencao.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-            <p className="text-sm font-medium text-slate-700">
-              Nada urgente no momento.
-            </p>
-            <p className="mt-1 text-sm text-slate-500">
-              Sem tarefas vencidas, sem eventos hoje e sem pendências críticas visíveis.
-            </p>
-          </div>
-        ) : (
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {precisaAtencao.map((item) => (
-              <div
-                key={`${item.tipo}-${item.id}`}
-                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-              >
-                <div className="mb-3">
-                  {item.tipo === "tarefa_vencida" ? (
-                    <StatusBadge variant="danger">Tarefa vencida</StatusBadge>
-                  ) : null}
-                  {item.tipo === "evento_hoje" ? (
-                    <StatusBadge variant="warning">Evento hoje</StatusBadge>
-                  ) : null}
-                  {item.tipo === "emprestimo_aberto" ? (
-                    <StatusBadge variant="info">Empréstimo em aberto</StatusBadge>
-                  ) : null}
-                </div>
+      {/* <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <SectionCard
+          title="Precisa de atenção"
+          description="Itens urgentes para você bater o olho e agir rápido."
+        >
+          {precisaAtencao.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
+              Nada urgente no momento. Sem tarefas vencidas, sem eventos hoje e sem pendências críticas visíveis.
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {precisaAtencao.map((item) => (
+                <div
+                  key={`${item.tipo}-${item.id}`}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
+                >
+                  <div className="mb-3">
+                    {item.tipo === "tarefa_vencida" ? (
+                      <StatusBadge variant="danger">Tarefa vencida</StatusBadge>
+                    ) : null}
+                    {item.tipo === "evento_hoje" ? (
+                      <StatusBadge variant="warning">Evento hoje</StatusBadge>
+                    ) : null}
+                    {item.tipo === "emprestimo_aberto" ? (
+                      <StatusBadge variant="info">Empréstimo em aberto</StatusBadge>
+                    ) : null}
+                  </div>
 
-                <h3 className="font-semibold text-slate-900">{item.titulo}</h3>
-                <p className="mt-1 text-sm text-slate-500">{item.detalhe}</p>
-              </div>
-            ))}
-          </div>
-        )}
-      </SectionCard>
+                  <h3 className="text-base font-semibold text-white">{item.titulo}</h3>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">{item.detalhe}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+
+      </div> */}
 
       <div className="grid gap-6 xl:grid-cols-2">
         <SectionCard
           title="Próximos eventos"
-          description="Preview da agenda da casa."
+          description="Agenda imediata da república."
         >
           {eventos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-              <p className="text-sm font-medium text-slate-700">
-                Nenhum evento próximo.
-              </p>
+            <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
+              Nenhum evento próximo.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {eventos.map((evento) => {
                 const resumo = getPresencasResumo(evento.id, presencas);
 
                 return (
                   <div
                     key={evento.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                    className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-900">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div className="space-y-2">
+                        <h3 className="text-base font-semibold text-white">
                           {evento.titulo}
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="text-sm text-zinc-400">
                           {formatDateTime(evento.data_inicio)}
                           {evento.local ? ` • ${evento.local}` : ""}
                         </p>
@@ -317,16 +310,12 @@ export default async function Page() {
                       </StatusBadge>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
-                      <div className="rounded-xl bg-emerald-50 px-3 py-2 text-emerald-700">
-                        {resumo.vai} vão
-                      </div>
-                      <div className="rounded-xl bg-rose-50 px-3 py-2 text-rose-700">
-                        {resumo.nao_vai} não vão
-                      </div>
-                      <div className="rounded-xl bg-amber-50 px-3 py-2 text-amber-700">
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <StatusBadge variant="success">{resumo.vai} vão</StatusBadge>
+                      <StatusBadge variant="danger">{resumo.nao_vai} não vão</StatusBadge>
+                      <StatusBadge variant="warning">
                         {resumo.pendente} pendentes
-                      </div>
+                      </StatusBadge>
                     </div>
                   </div>
                 );
@@ -336,17 +325,15 @@ export default async function Page() {
         </SectionCard>
 
         <SectionCard
-          title="Tarefas da casa"
-          description="Pendências abertas e em andamento."
+          title="Tarefas avulsas em aberto"
+          description="Pendências operacionais da semana."
         >
           {tarefasAbertas.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-              <p className="text-sm font-medium text-slate-700">
-                Nenhuma tarefa em aberto.
-              </p>
+            <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
+              Nenhuma tarefa em aberto.
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {tarefasAbertas.slice(0, 5).map((tarefa) => {
                 const responsavel = moradores.find(
                   (morador) => morador.id === tarefa.responsavel_morador_id
@@ -360,38 +347,39 @@ export default async function Page() {
                 return (
                   <div
                     key={tarefa.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                    className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="font-semibold text-slate-900">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                      <div className="space-y-2">
+                        <h3 className="text-base font-semibold text-white">
                           {tarefa.titulo}
                         </h3>
-                        <p className="mt-1 text-sm text-slate-500">
+                        <p className="text-sm text-zinc-400">
                           Prazo: {formatDate(tarefa.data_limite)}
                         </p>
+                        {tarefa.descricao ? (
+                          <p className="text-sm leading-6 text-zinc-500">
+                            {tarefa.descricao}
+                          </p>
+                        ) : null}
                       </div>
 
-                      <StatusBadge variant={getTarefaStatusVariant(tarefa.status)}>
-                        {getTarefaStatusLabel(tarefa.status)}
-                      </StatusBadge>
+                      <div className="flex flex-wrap gap-2">
+                        <StatusBadge variant={getTarefaStatusVariant(tarefa.status)}>
+                          {getTarefaStatusLabel(tarefa.status)}
+                        </StatusBadge>
+                        {vencida ? (
+                          <StatusBadge variant="danger">Vencida</StatusBadge>
+                        ) : null}
+                      </div>
                     </div>
 
-                    {tarefa.descricao ? (
-                      <p className="mt-3 text-sm text-slate-600">
-                        {tarefa.descricao}
-                      </p>
-                    ) : null}
-
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <StatusBadge variant="neutral">
+                    <p className="mt-4 text-sm text-zinc-400">
+                      Responsável:{" "}
+                      <span className="font-medium text-zinc-200">
                         {responsavel?.nome ?? "Sem responsável"}
-                      </StatusBadge>
-
-                      {vencida ? (
-                        <StatusBadge variant="danger">Vencida</StatusBadge>
-                      ) : null}
-                    </div>
+                      </span>
+                    </p>
                   </div>
                 );
               })}
@@ -400,95 +388,44 @@ export default async function Page() {
         </SectionCard>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <SectionCard
-          title="Empréstimos em aberto"
-          description="Itens que ainda precisam voltar ou ser devolvidos."
-        >
-          {emprestimos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-              <p className="text-sm font-medium text-slate-700">
-                Nenhum empréstimo em aberto.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {emprestimos.map((item) => (
-                <div
-                  key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-slate-900">
-                        {item.nome_item}
-                      </h3>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {item.pessoa_nome}
-                        {item.pessoa_republica ? ` • ${item.pessoa_republica}` : ""}
-                      </p>
-                    </div>
-
-                    <StatusBadge variant={getEmprestimoTipoVariant(item.tipo)}>
-                      {getEmprestimoTipoLabel(item.tipo)}
-                    </StatusBadge>
+      <SectionCard
+        title="Empréstimos em aberto"
+        description="Itens que ainda precisam ser devolvidos ou recebidos."
+      >
+        {emprestimos.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
+            Nenhum empréstimo em aberto.
+          </div>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {emprestimos.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-base font-semibold text-white">
+                      {item.nome_item}
+                    </h3>
+                    <p className="mt-2 text-sm text-zinc-400">
+                      {item.pessoa_nome}
+                      {item.pessoa_republica ? ` • ${item.pessoa_republica}` : ""}
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-500">
+                      Desde {formatDate(item.data_emprestimo)}
+                    </p>
                   </div>
 
-                  <p className="mt-3 text-sm text-slate-600">
-                    Desde {formatDate(item.data_emprestimo)}
-                  </p>
+                  <StatusBadge variant={getEmprestimoTipoVariant(item.tipo)}>
+                    {getEmprestimoTipoLabel(item.tipo)}
+                  </StatusBadge>
                 </div>
-              ))}
-            </div>
-          )}
-        </SectionCard>
-
-        <SectionCard
-          title="Moradores"
-          description="Resumo rápido da casa."
-        >
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-sm text-slate-500">Ativos</p>
-                <p className="mt-2 text-2xl font-semibold text-slate-900">
-                  {moradoresAtivos.length}
-                </p>
               </div>
-
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p className="text-sm text-slate-500">Total cadastrados</p>
-                <p className="mt-2 text-2xl font-semibold text-slate-900">
-                  {moradores.length}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="mb-3 text-sm font-medium text-slate-700">
-                Quem está na casa
-              </p>
-
-              {moradores.length === 0 ? (
-                <p className="text-sm text-slate-500">
-                  Nenhum morador cadastrado.
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {moradores.slice(0, 12).map((morador) => (
-                    <StatusBadge
-                      key={morador.id}
-                      variant={morador.ativo === false ? "neutral" : "success"}
-                    >
-                      {morador.nome}
-                    </StatusBadge>
-                  ))}
-                </div>
-              )}
-            </div>
+            ))}
           </div>
-        </SectionCard>
-      </div>
+        )}
+      </SectionCard>
     </div>
   );
 }

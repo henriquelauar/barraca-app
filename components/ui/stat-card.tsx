@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Card } from "@/components/ui/card";
 
 type StatCardProps = {
   title: string;
@@ -7,24 +8,33 @@ type StatCardProps = {
   icon?: ReactNode;
 };
 
-export function StatCard({ title, value, helper, icon }: StatCardProps) {
+export function StatCard({
+  title,
+  value,
+  helper,
+  icon,
+}: StatCardProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <Card className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-2">
-          <p className="text-sm font-medium text-slate-500">{title}</p>
-          <p className="text-2xl font-semibold tracking-tight text-slate-900">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+            {title}
+          </p>
+          <p className="text-2xl font-bold tracking-tight text-white md:text-3xl">
             {value}
           </p>
-          {helper ? <p className="text-xs text-slate-400">{helper}</p> : null}
+          {helper ? (
+            <p className="text-sm leading-6 text-zinc-400">{helper}</p>
+          ) : null}
         </div>
 
         {icon ? (
-          <div className="rounded-xl bg-slate-100 p-3 text-slate-600">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3 text-zinc-300">
             {icon}
           </div>
         ) : null}
       </div>
-    </div>
+    </Card>
   );
 }

@@ -10,30 +10,31 @@ export default async function EventosPage() {
   const data = await listarEventosPagina();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       <PageHeader
         title="Eventos"
         description="Agenda da Barraca Armada"
         action={<EventoFormModal />}
       />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <StatCard title="No mês" value={data.stats.noMes} />
-        <StatCard title="Próximos" value={data.stats.proximos} />
-        <StatCard title="Hoje" value={data.stats.hoje} />
-        <StatCard title="Passados" value={data.stats.passados} />
-        <StatCard title="Pendentes" value={data.stats.pendentesResposta} />
-      </div>
-
-      <SectionCard title="Calendário mensal">
+      <SectionCard
+        title="Calendário mensal"
+        description="Visual mensal dos eventos cadastrados."
+      >
         <EventoCalendar eventos={data.eventosDoMes} />
       </SectionCard>
 
-      <SectionCard title="Próximos eventos">
+      <SectionCard
+        title="Próximos eventos"
+        description="Eventos futuros com presença e ações rápidas."
+      >
         <EventosTable eventos={data.proximos} variant="proximos" />
       </SectionCard>
 
-      <SectionCard title="Eventos passados">
+      <SectionCard
+        title="Eventos passados"
+        description="Histórico recente dos eventos da casa."
+      >
         <EventosTable eventos={data.passados} variant="passados" />
       </SectionCard>
     </div>

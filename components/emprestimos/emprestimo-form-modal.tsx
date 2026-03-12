@@ -27,26 +27,24 @@ export function EmprestimoFormModal() {
 
   return (
     <>
-      <Button type="button" onClick={() => setOpen(true)}>
+      <Button size="lg" onClick={() => setOpen(true)}>
         Novo empréstimo
       </Button>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <button
-            type="button"
-            aria-label="Fechar modal"
+        <div className="fixed inset-0 z-[60]">
+          <div
             onClick={() => setOpen(false)}
-            className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
           />
 
-          <div className="relative z-10 w-full max-w-3xl rounded-2xl border border-slate-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-4">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">
+          <div className="absolute inset-x-0 bottom-0 top-auto max-h-[92vh] overflow-y-auto rounded-t-[28px] border border-zinc-800 bg-zinc-950 p-5 shadow-2xl md:inset-auto md:left-1/2 md:top-1/2 md:w-full md:max-w-2xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:p-6">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold tracking-tight text-white">
                   Novo empréstimo
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="text-sm leading-6 text-zinc-400">
                   Registre um item que você emprestou ou pegou emprestado.
                 </p>
               </div>
@@ -54,15 +52,14 @@ export function EmprestimoFormModal() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-lg text-zinc-100 hover:bg-zinc-800"
+                aria-label="Fechar modal"
               >
                 ×
               </button>
             </div>
 
-            <div className="max-h-[80vh] overflow-y-auto px-6 py-5">
-              <EmprestimoForm />
-            </div>
+            <EmprestimoForm />
           </div>
         </div>
       ) : null}

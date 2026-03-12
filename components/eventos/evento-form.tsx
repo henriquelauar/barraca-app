@@ -78,10 +78,10 @@ export function EventoForm() {
             className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
           >
             <option value="social">Social</option>
-            <option value="manutencao">Formatura</option>
+            <option value="formatura">Formatura</option>
             <option value="reuniao">Reunião</option>
-            <option value="financeiro">Aniversário</option>
-            <option value="limpeza">Escolha</option>
+            <option value="escolha">Escolha</option>
+            <option value="almoco">Almoço</option>
             <option value="aniversario">Aniversário</option>
             <option value="outro">Outro</option>
           </select>

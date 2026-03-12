@@ -116,7 +116,10 @@ function groupByTaskAndDay(items: TarefaItem[]) {
     const tarefa = renderTarefa(item.tarefa);
     const key = `${tarefa?.nome ?? "Tarefa"}::${item.dia_semana ?? -1}`;
 
-    if (!map.has(key)) map.set(key, []);
+    if (!map.has(key)) {
+      map.set(key, []);
+    }
+
     map.get(key)!.push(item);
   }
 
@@ -143,31 +146,52 @@ function SemanaCell({
   horario?: boolean;
 }) {
   if (items.length === 0) {
-    return <span className="text-xs text-slate-400">—</span>;
+    return <span className="text-sm text-zinc-600">—</span>;
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {items.map((item) => {
         const execucao = findExecucao(execucoes, item.id, dataReferencia);
 
         return (
           <TarefaCell
-            key={item.id}
+            key={`${item.id}-${dataReferencia}`}
             atribuicaoId={item.id}
             dataReferencia={dataReferencia}
             responsavel={renderNome(item.morador)}
             statusAtual={execucao?.status ?? null}
             horario={
-              horario && item.hora_inicio && item.hora_fim
-                ? `${formatarHorario(item.hora_inicio)} às ${formatarHorario(
-                    item.hora_fim
-                  )}`
+              horario
+                ? `${formatarHorario(item.hora_inicio)}–${formatarHorario(item.hora_fim)}`
                 : null
             }
           />
         );
       })}
+    </div>
+  );
+}
+
+function MobileTaskBlock({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+      <div className="mb-4">
+        <h3 className="text-base font-semibold text-white">{title}</h3>
+        {subtitle ? (
+          <p className="mt-1 text-sm leading-6 text-zinc-400">{subtitle}</p>
+        ) : null}
+      </div>
+
+      <div className="space-y-4">{children}</div>
     </div>
   );
 }
@@ -252,90 +276,114 @@ export default async function TarefasPage({
   ).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       <PageHeader
         title="Tarefas"
-        description="Visualização semanal da Barraca Armada com histórico por semana e atualização direta na tabela."
+        description="Visual semanal das atividades da casa, tarefas rotativas, pets e horários. Agora com foco em leitura rápida, contraste e uso no celular."
       />
 
+      <SemanaSelector
+        inicioSemana={resumo.inicioSemana}
+        anteriorSemana={resumo.anteriorSemana}
+        proximaSemana={resumo.proximaSemana}
+        semanaAtualInicio={resumo.semanaAtualInicio}
+      />
 
       <SectionCard
-        title="Navegação semanal"
-        description="Alterne entre a semana atual e semanas anteriores para consultar o histórico."
+        title="Tarefas gerais"
+        description="Limpeza e manutenção recorrente da casa. No desktop fica em tabela. No celular, em blocos empilhados."
       >
-        <SemanaSelector
-          inicioSemana={resumo.inicioSemana}
-          anteriorSemana={resumo.anteriorSemana}
-          proximaSemana={resumo.proximaSemana}
-          semanaAtualInicio={resumo.semanaAtualInicio}
-        />
-      </SectionCard>
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="table-dark min-w-[980px]">
+            <thead>
+              <tr>
+                <th>Tarefa</th>
+                {diasGerais.map((dia) => (
+                  <th key={dia.value}>{dia.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {tarefasGerais.map((tarefaNome) => (
+                <tr key={tarefaNome}>
+                  <td className="w-[220px] font-semibold text-white">{tarefaNome}</td>
+                  {diasGerais.map((dia) => {
+                    const items = getCellItems(groupedFixas, tarefaNome, dia.value);
+                    const dataReferencia = getDateForWeekday(
+                      resumo.inicioSemana,
+                      dia.value
+                    );
 
-
-      <SectionCard
-        title="Geral"
-        description="Tabela operacional da semana para as tarefas fixas da casa."
-      >
-        <div className="module-bar-amber mb-5" />
-
-        <div className="data-table-wrapper">
-          <div className="overflow-x-auto scrollbar-thin">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Tarefa</th>
-                  {diasGerais.map((dia) => (
-                    <th key={dia.value}>{dia.label}</th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {tarefasGerais.map((tarefaNome) => (
-                  <tr key={tarefaNome}>
-                    <td className="font-medium text-slate-900">{tarefaNome}</td>
-                    {diasGerais.map((dia) => (
-                      <td key={dia.value} className="align-top">
+                    return (
+                      <td key={`${tarefaNome}-${dia.value}`} className="min-w-[260px]">
                         <SemanaCell
-                          items={getCellItems(groupedFixas, tarefaNome, dia.value)}
+                          items={items}
                           execucoes={execucoes}
-                          dataReferencia={getDateForWeekday(
-                            resumo.inicioSemana,
-                            dia.value
-                          )}
+                          dataReferencia={dataReferencia}
                         />
                       </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="space-y-4 lg:hidden">
+          {tarefasGerais.map((tarefaNome) => (
+            <MobileTaskBlock
+              key={tarefaNome}
+              title={tarefaNome}
+              subtitle="Responsáveis por dia da semana"
+            >
+              {diasGerais.map((dia) => {
+                const items = getCellItems(groupedFixas, tarefaNome, dia.value);
+                const dataReferencia = getDateForWeekday(
+                  resumo.inicioSemana,
+                  dia.value
+                );
+
+                return (
+                  <div key={`${tarefaNome}-${dia.value}`} className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                      {dia.label}
+                    </p>
+                    <SemanaCell
+                      items={items}
+                      execucoes={execucoes}
+                      dataReferencia={dataReferencia}
+                    />
+                  </div>
+                );
+              })}
+            </MobileTaskBlock>
+          ))}
         </div>
       </SectionCard>
+
       <SectionCard
-        title="Escala rotativa semanal"
-        description="Visualização por ciclo, no estilo da planilha da casa."
+        title="Escala rotativa"
+        description="Distribuição atual do ciclo rotativo da casa."
         action={
-          ciclos.length > 0 ? (
+          <div className="w-full md:w-auto">
             <CicloSelector ciclos={ciclos} cicloAtual={cicloAtual} />
-          ) : null
+          </div>
         }
       >
-        <div className="module-bar-amber mb-5" />
-
         {ciclos.length === 0 ? (
-          <div className="empty-state">
+          <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
             Nenhum ciclo rotativo cadastrado ainda.
           </div>
         ) : (
-          <div className="data-table-wrapper">
-            <div className="overflow-x-auto scrollbar-thin">
-              <table className="data-table">
+          <>
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="table-dark min-w-[900px]">
                 <thead>
                   <tr>
                     <th>Morador</th>
-                    <th>{cicloAtual}</th>
+                    <th>Tarefa</th>
+                    <th>Status hoje</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -348,14 +396,13 @@ export default async function TarefasPage({
 
                     return (
                       <tr key={item.atribuicaoId}>
-                        <td className="font-medium text-slate-900">
-                          {item.moradorNome}
-                        </td>
-                        <td className="align-top">
+                        <td className="font-semibold text-white">{item.moradorNome}</td>
+                        <td>{item.tarefaNome}</td>
+                        <td className="min-w-[320px]">
                           <TarefaCell
                             atribuicaoId={item.atribuicaoId}
                             dataReferencia={resumo.hoje}
-                            responsavel={item.tarefaNome}
+                            responsavel={item.moradorNome}
                             statusAtual={execucao?.status ?? null}
                           />
                         </td>
@@ -365,173 +412,162 @@ export default async function TarefasPage({
                 </tbody>
               </table>
             </div>
-          </div>
+
+            <div className="space-y-4 lg:hidden">
+              {moradoresRotativa.map((item) => {
+                const execucao = findExecucao(
+                  execucoes,
+                  item.atribuicaoId,
+                  resumo.hoje
+                );
+
+                return (
+                  <MobileTaskBlock
+                    key={item.atribuicaoId}
+                    title={item.moradorNome}
+                    subtitle={item.tarefaNome}
+                  >
+                    <TarefaCell
+                      atribuicaoId={item.atribuicaoId}
+                      dataReferencia={resumo.hoje}
+                      responsavel={item.moradorNome}
+                      statusAtual={execucao?.status ?? null}
+                    />
+                  </MobileTaskBlock>
+                );
+              })}
+            </div>
+          </>
         )}
       </SectionCard>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <SectionCard
-          title="Cocô Donatella"
-          description="Escala semanal da Donatella."
-        >
-          <div className="module-bar-amber mb-5" />
+      <SectionCard
+        title="Pets"
+        description="Rotinas diárias da Donatella."
+      >
+        <div className="grid gap-6 xl:grid-cols-2">
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-white">Cocô Donatella</h3>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+              {diasSemana.map((dia) => {
+                const items = getCellItems(groupedPets, "Cocô Donatella", dia.value);
+                const dataReferencia = getDateForWeekday(
+                  resumo.inicioSemana,
+                  dia.value
+                );
 
-          <div className="data-table-wrapper">
-            <div className="overflow-x-auto scrollbar-thin">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Dia</th>
-                    <th>Responsável</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {diasSemana.map((dia) => {
-                    const items = getCellItems(
-                      groupedPets,
-                      "Cocô Donatella",
-                      dia.value
-                    );
-
-                    return (
-                      <tr key={dia.value}>
-                        <td className="font-medium text-slate-900">
-                          {dia.label}
-                        </td>
-                        <td className="align-top">
-                          <SemanaCell
-                            items={items}
-                            execucoes={execucoes}
-                            dataReferencia={getDateForWeekday(
-                              resumo.inicioSemana,
-                              dia.value
-                            )}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                return (
+                  <div
+                    key={`coco-${dia.value}`}
+                    className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
+                  >
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                      {dia.label}
+                    </p>
+                    <SemanaCell
+                      items={items}
+                      execucoes={execucoes}
+                      dataReferencia={dataReferencia}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </SectionCard>
 
-        <SectionCard
-          title="Passear Donatella"
-          description="Escala semanal de passeio."
-        >
-          <div className="module-bar-amber mb-5" />
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-white">Passear Donatella</h3>
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+              {diasSemana.map((dia) => {
+                const items = getCellItems(
+                  groupedPets,
+                  "Passear Donatella",
+                  dia.value
+                );
+                const dataReferencia = getDateForWeekday(
+                  resumo.inicioSemana,
+                  dia.value
+                );
 
-          <div className="data-table-wrapper">
-            <div className="overflow-x-auto scrollbar-thin">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Dia</th>
-                    <th>Responsável</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {diasSemana.map((dia) => {
-                    const items = getCellItems(
-                      groupedPets,
-                      "Passear Donatella",
-                      dia.value
-                    );
-
-                    return (
-                      <tr key={dia.value}>
-                        <td className="font-medium text-slate-900">
-                          {dia.label}
-                        </td>
-                        <td className="align-top">
-                          <SemanaCell
-                            items={items}
-                            execucoes={execucoes}
-                            dataReferencia={getDateForWeekday(
-                              resumo.inicioSemana,
-                              dia.value
-                            )}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                return (
+                  <div
+                    key={`passeio-${dia.value}`}
+                    className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
+                  >
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                      {dia.label}
+                    </p>
+                    <SemanaCell
+                      items={items}
+                      execucoes={execucoes}
+                      dataReferencia={dataReferencia}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </SectionCard>
-      </div>
+        </div>
+      </SectionCard>
 
       <SectionCard
-        title="Lavar Roupa"
-        description="Escala semanal por faixa de horário."
+        title="Lavar roupa"
+        description="Separação por turnos ao longo da semana."
       >
-        <div className="module-bar-amber mb-5" />
+        <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+          {diasSemana.map((dia) => {
+            const itemsDia = getCellItems(groupedHorarios, "Lavar Roupa", dia.value);
 
-        <div className="data-table-wrapper">
-          <div className="overflow-x-auto scrollbar-thin">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Dia</th>
-                  <th>00h–14h</th>
-                  <th>14h–24h</th>
-                </tr>
-              </thead>
+            const turno1 = itemsDia.filter(
+              (item) =>
+                formatarHorario(item.hora_inicio) === "00:00" &&
+                formatarHorario(item.hora_fim).startsWith("14:")
+            );
 
-              <tbody>
-                {diasSemana.map((dia) => {
-                  const itemsDia = getCellItems(
-                    groupedHorarios,
-                    "Lavar Roupa",
-                    dia.value
-                  );
+            const turno2 = itemsDia.filter(
+              (item) =>
+                formatarHorario(item.hora_inicio).startsWith("14:") &&
+                formatarHorario(item.hora_fim)
+            );
 
-                  const turno1 = itemsDia.filter(
-                    (item) =>
-                      formatarHorario(item.hora_inicio) === "00:00" &&
-                      formatarHorario(item.hora_fim).startsWith("14:")
-                  );
+            const dataReferencia = getDateForWeekday(
+              resumo.inicioSemana,
+              dia.value
+            );
 
-                  const turno2 = itemsDia.filter(
-                    (item) =>
-                      formatarHorario(item.hora_inicio).startsWith("14:") &&
-                      formatarHorario(item.hora_fim)
-                  );
+            return (
+              <div
+                key={`roupa-${dia.value}`}
+                className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
+              >
+                <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                  {dia.label}
+                </p>
 
-                  const dataReferencia = getDateForWeekday(
-                    resumo.inicioSemana,
-                    dia.value
-                  );
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-white">00h–14h</p>
+                    <SemanaCell
+                      items={turno1}
+                      execucoes={execucoes}
+                      dataReferencia={dataReferencia}
+                      horario
+                    />
+                  </div>
 
-                  return (
-                    <tr key={dia.value}>
-                      <td className="font-medium text-slate-900">{dia.label}</td>
-                      <td className="align-top">
-                        <SemanaCell
-                          items={turno1}
-                          execucoes={execucoes}
-                          dataReferencia={dataReferencia}
-                          horario
-                        />
-                      </td>
-                      <td className="align-top">
-                        <SemanaCell
-                          items={turno2}
-                          execucoes={execucoes}
-                          dataReferencia={dataReferencia}
-                          horario
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  <div className="space-y-3">
+                    <p className="text-sm font-semibold text-white">14h–24h</p>
+                    <SemanaCell
+                      items={turno2}
+                      execucoes={execucoes}
+                      dataReferencia={dataReferencia}
+                      horario
+                    />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </SectionCard>
     </div>

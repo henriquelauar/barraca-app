@@ -31,16 +31,18 @@ function MiniButton({
 
   const classes =
     value === "concluida"
-      ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
       : value === "nao_feita"
-      ? "bg-rose-600 hover:bg-rose-700 text-white"
-      : "bg-slate-200 hover:bg-slate-300 text-slate-700";
+      ? "border-rose-500/20 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
+      : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700";
 
   return (
     <button
       type="submit"
+      name="status"
+      value={value}
       disabled={pending}
-      className={`rounded-md px-2 py-1 text-[11px] font-medium transition ${classes}`}
+      className={`inline-flex h-8 items-center justify-center rounded-lg border px-2.5 text-[11px] font-semibold ${classes} disabled:cursor-not-allowed disabled:opacity-70`}
     >
       {pending ? "..." : label}
     </button>
@@ -63,39 +65,33 @@ export function TarefaCell({
   const [, formAction] = useFormState(marcarTarefaStatus, null);
 
   return (
-    <div className="min-w-[160px] space-y-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <div className="space-y-1">
-        <p className="text-sm font-semibold text-slate-900">{responsavel}</p>
-        {horario ? (
-          <p className="text-[11px] text-slate-500">{horario}</p>
-        ) : null}
-        <StatusBadge variant={statusVariant(statusAtual) as any}>
+    <form
+      action={formAction}
+      className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-3"
+    >
+      <input type="hidden" name="atribuicao_id" value={atribuicaoId} />
+      <input type="hidden" name="data_referencia" value={dataReferencia} />
+
+      <div className="space-y-3">
+        <div>
+          <p className="text-sm font-semibold text-white">{responsavel}</p>
+          {horario ? (
+            <p className="mt-1 text-xs uppercase tracking-[0.14em] text-zinc-500">
+              {horario}
+            </p>
+          ) : null}
+        </div>
+
+        <StatusBadge variant={statusVariant(statusAtual)}>
           {statusLabel(statusAtual)}
         </StatusBadge>
+
+        <div className="grid grid-cols-3 gap-2">
+          <MiniButton label="Ok" value="concluida" />
+          <MiniButton label="Pendente" value="pendente" />
+          <MiniButton label="Não fez" value="nao_feita" />
+        </div>
       </div>
-
-      <div className="flex flex-wrap gap-1.5">
-        <form action={formAction}>
-          <input type="hidden" name="atribuicao_id" value={atribuicaoId} />
-          <input type="hidden" name="data_referencia" value={dataReferencia} />
-          <input type="hidden" name="status" value="concluida" />
-          <MiniButton label="✔" value="concluida" />
-        </form>
-
-        <form action={formAction}>
-          <input type="hidden" name="atribuicao_id" value={atribuicaoId} />
-          <input type="hidden" name="data_referencia" value={dataReferencia} />
-          <input type="hidden" name="status" value="pendente" />
-          <MiniButton label="…" value="pendente" />
-        </form>
-
-        <form action={formAction}>
-          <input type="hidden" name="atribuicao_id" value={atribuicaoId} />
-          <input type="hidden" name="data_referencia" value={dataReferencia} />
-          <input type="hidden" name="status" value="nao_feita" />
-          <MiniButton label="✕" value="nao_feita" />
-        </form>
-      </div>
-    </div>
+    </form>
   );
 }

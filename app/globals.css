@@ -2,234 +2,112 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top, rgba(245, 158, 11, 0.08), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.08), transparent 24%),
+    #09090b;
+  color: #f4f4f5;
+}
+
+* {
+  border-color: #27272a;
+}
+
+::selection {
+  background: rgba(245, 158, 11, 0.28);
+  color: #fff7ed;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
 @layer base {
-  :root {
-    --background: 248 250 252;
-    --foreground: 15 23 42;
-
-    --card: 255 255 255;
-    --card-foreground: 15 23 42;
-
-    --popover: 255 255 255;
-    --popover-foreground: 15 23 42;
-
-    --primary: 37 99 235;
-    --primary-foreground: 255 255 255;
-
-    --secondary: 241 245 249;
-    --secondary-foreground: 15 23 42;
-
-    --muted: 241 245 249;
-    --muted-foreground: 100 116 139;
-
-    --accent: 239 246 255;
-    --accent-foreground: 30 64 175;
-
-    --destructive: 225 29 72;
-    --destructive-foreground: 255 255 255;
-
-    --border: 226 232 240;
-    --input: 226 232 240;
-    --ring: 59 130 246;
-
-    --radius: 1rem;
-  }
-
   * {
-    @apply border-slate-200;
-  }
-
-  html {
-    @apply scroll-smooth;
+    @apply border-zinc-800;
   }
 
   body {
-    @apply bg-slate-50 text-slate-900 antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
-    background-image:
-      radial-gradient(circle at top left, rgba(59, 130, 246, 0.06), transparent 28%),
-      radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.04), transparent 24%);
-    background-attachment: fixed;
+    @apply bg-zinc-950 text-zinc-100;
   }
 
-  ::selection {
-    @apply bg-blue-100 text-blue-900;
-  }
-
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    @apply text-slate-900;
-  }
-
-  p {
-    @apply text-slate-600;
-  }
-
-  a {
-    @apply transition-colors;
-  }
-
+  a,
   button,
   input,
   select,
   textarea {
-    @apply outline-none;
-  }
-
-  input,
-  select,
-  textarea {
-    @apply border-slate-300 bg-white text-slate-900 placeholder:text-slate-400;
-  }
-
-  input:focus,
-  select:focus,
-  textarea:focus {
-    @apply ring-2 ring-blue-500/20 border-blue-500;
-  }
-
-  table {
-    @apply w-full border-collapse;
-  }
-
-  th {
-    @apply text-slate-500;
-  }
-
-  td {
-    @apply text-slate-700;
+    @apply transition-all duration-200;
   }
 }
 
 @layer components {
-  .app-shell {
-    @apply min-h-screen bg-slate-50 text-slate-900;
+  .bg-app {
+    @apply bg-zinc-950;
   }
 
-  .page-container {
-    @apply mx-auto w-full max-w-7xl space-y-6;
+  .bg-surface {
+    @apply bg-zinc-900/70 backdrop-blur-sm;
   }
 
-  .page-section {
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  .border-app {
+    @apply border-zinc-800;
   }
 
-  .page-section-header {
-    @apply flex flex-col gap-2 border-b border-slate-100 px-6 py-5 md:flex-row md:items-center md:justify-between;
+  .text-soft {
+    @apply text-zinc-400;
   }
 
-  .page-section-body {
-    @apply px-6 py-5;
+  .text-strong {
+    @apply text-zinc-100;
   }
 
-  .soft-card {
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+  .ring-app {
+    @apply ring-zinc-800;
   }
 
-  .soft-card-hover {
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md;
+  .shadow-app {
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.03),
+      0 20px 40px rgba(0, 0, 0, 0.32);
   }
 
-  .subtle-grid {
-    @apply grid gap-4;
+  .table-dark {
+    @apply w-full border-separate border-spacing-0 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60;
   }
 
-  .data-table-wrapper {
-    @apply overflow-hidden rounded-xl border border-slate-200 bg-white;
+  .table-dark thead th {
+    @apply border-b border-zinc-800 bg-zinc-900 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400;
   }
 
-  .data-table {
-    @apply min-w-full divide-y divide-slate-200;
+  .table-dark tbody td {
+    @apply border-b border-zinc-800/80 px-4 py-4 align-top text-sm text-zinc-200;
   }
 
-  .data-table thead {
-    @apply bg-slate-50;
-  }
-
-  .data-table th {
-    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500;
-  }
-
-  .data-table td {
-    @apply px-4 py-4 align-middle text-sm text-slate-700;
-  }
-
-  .data-table tbody tr {
-    @apply transition-colors hover:bg-slate-50;
-  }
-
-  .empty-state {
-    @apply rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center text-sm text-slate-500;
-  }
-
-  .form-grid {
-    @apply grid gap-4 md:grid-cols-2;
-  }
-
-  .form-field {
-    @apply space-y-2;
-  }
-
-  .form-label {
-    @apply text-sm font-medium text-slate-700;
-  }
-
-  .alert-error {
-    @apply rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700;
-  }
-
-  .alert-success {
-    @apply rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700;
-  }
-
-  .module-bar-blue {
-    @apply h-1 rounded-full bg-blue-500;
-  }
-
-  .module-bar-green {
-    @apply h-1 rounded-full bg-emerald-500;
-  }
-
-  .module-bar-violet {
-    @apply h-1 rounded-full bg-violet-500;
-  }
-
-  .module-bar-amber {
-    @apply h-1 rounded-full bg-amber-500;
-  }
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: rgb(148 163 184) transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgb(148 163 184);
-    border-radius: 9999px;
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(100 116 139);
+  .table-dark tbody tr:last-child td {
+    @apply border-b-0;
   }
 }

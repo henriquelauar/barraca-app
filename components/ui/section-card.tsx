@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { Card } from "@/components/ui/card";
 
 type SectionCardProps = {
   title: string;
@@ -14,19 +15,21 @@ export function SectionCard({
   action,
 }: SectionCardProps) {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-slate-100 px-6 py-5 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-          {description ? (
-            <p className="text-sm text-slate-500">{description}</p>
-          ) : null}
-        </div>
+    <Card className="overflow-hidden">
+      <div className="border-b border-zinc-800 px-5 py-4 md:px-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-semibold text-white md:text-xl">{title}</h2>
+            {description ? (
+              <p className="text-sm leading-6 text-zinc-400">{description}</p>
+            ) : null}
+          </div>
 
-        {action ? <div>{action}</div> : null}
+          {action ? <div>{action}</div> : null}
+        </div>
       </div>
 
-      <div className="px-6 py-5">{children}</div>
-    </section>
+      <div className="p-5 md:p-6">{children}</div>
+    </Card>
   );
 }

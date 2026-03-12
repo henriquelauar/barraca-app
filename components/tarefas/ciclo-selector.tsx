@@ -25,19 +25,15 @@ export function CicloSelector({
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <label
-        htmlFor="ciclo"
-        className="text-sm font-medium text-slate-700"
-      >
-        Quinzenal
+    <div className="flex w-full flex-col gap-2 sm:w-auto">
+      <label className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+        Ciclo rotativo
       </label>
 
       <select
-        id="ciclo"
         value={cicloAtual}
         onChange={(e) => handleChange(e.target.value)}
-        className="h-10 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+        className="h-11 min-w-[180px] rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
       >
         {ciclos.map((ciclo) => (
           <option key={ciclo} value={ciclo}>

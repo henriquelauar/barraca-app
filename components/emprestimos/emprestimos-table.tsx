@@ -37,15 +37,51 @@ function formatarData(data: string | null) {
 
 function EmptyState({ variant }: { variant: "em_aberto" | "devolvidos" }) {
   return (
-    <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
-      <p className="text-sm font-medium text-slate-700">
+    <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
+      <p className="font-medium text-zinc-300">
         {variant === "em_aberto"
           ? "Nenhum empréstimo em aberto."
           : "Nenhum empréstimo devolvido ainda."}
       </p>
-      <p className="mt-1 text-sm text-slate-500">
-        Os registros aparecerão aqui conforme forem cadastrados.
-      </p>
+      <p className="mt-2">Os registros aparecerão aqui conforme forem cadastrados.</p>
+    </div>
+  );
+}
+
+function ActionButtons({ item }: { item: Emprestimo }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {item.status === "em_aberto" ? (
+        <form action={marcarEmprestimoComoDevolvido}>
+          <input type="hidden" name="id" value={item.id} />
+          <button
+            type="submit"
+            className="inline-flex h-9 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 text-sm font-semibold text-emerald-300 hover:bg-emerald-500/20"
+          >
+            Marcar devolvido
+          </button>
+        </form>
+      ) : (
+        <form action={reabrirEmprestimo}>
+          <input type="hidden" name="id" value={item.id} />
+          <button
+            type="submit"
+            className="inline-flex h-9 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 text-sm font-semibold text-amber-300 hover:bg-amber-500/20"
+          >
+            Reabrir
+          </button>
+        </form>
+      )}
+
+      <form action={removerEmprestimo}>
+        <input type="hidden" name="id" value={item.id} />
+        <button
+          type="submit"
+          className="inline-flex h-9 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 px-3 text-sm font-semibold text-rose-300 hover:bg-rose-500/20"
+        >
+          Remover
+        </button>
+      </form>
     </div>
   );
 }
@@ -59,100 +95,57 @@ export function EmprestimosTable({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="hidden overflow-x-auto rounded-2xl border border-slate-200 md:block">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
-            <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <th className="px-4 py-3">Item</th>
-              <th className="px-4 py-3">Tipo</th>
-              <th className="px-4 py-3">Data</th>
-              <th className="px-4 py-3">Pessoa</th>
-              <th className="px-4 py-3">República</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Ações</th>
+    <>
+      <div className="hidden xl:block overflow-x-auto">
+        <table className="table-dark min-w-[1100px]">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Tipo</th>
+              <th>Data</th>
+              <th>Pessoa</th>
+              <th>República</th>
+              <th>Status</th>
+              <th>Ações</th>
             </tr>
           </thead>
-
-          <tbody className="divide-y divide-slate-200 bg-white">
+          <tbody>
             {emprestimos.map((item) => (
-              <tr key={item.id} className="align-top">
-                <td className="px-4 py-4">
-                  <div className="max-w-[280px]">
-                    <p className="font-medium text-slate-900">
-                      {item.nome_item}
-                    </p>
+              <tr key={item.id}>
+                <td className="min-w-[280px]">
+                  <div className="space-y-1">
+                    <p className="font-semibold text-white">{item.nome_item}</p>
+
                     {item.observacao ? (
-                      <p className="mt-1 line-clamp-2 text-sm text-slate-500">
-                        {item.observacao}
-                      </p>
+                      <p className="text-sm text-zinc-500">{item.observacao}</p>
                     ) : null}
+
                     {item.data_devolucao ? (
-                      <p className="mt-1 text-xs text-slate-400">
+                      <p className="text-xs text-zinc-500">
                         Devolvido em {formatarData(item.data_devolucao)}
                       </p>
                     ) : null}
                   </div>
                 </td>
 
-                <td className="px-4 py-4">
+                <td>
                   <StatusBadge variant={getTipoVariant(item.tipo)}>
                     {getTipoLabel(item.tipo)}
                   </StatusBadge>
                 </td>
 
-                <td className="px-4 py-4 text-sm text-slate-700">
-                  {formatarData(item.data_emprestimo)}
-                </td>
+                <td>{formatarData(item.data_emprestimo)}</td>
+                <td>{item.pessoa_nome}</td>
+                <td>{item.pessoa_republica || "—"}</td>
 
-                <td className="px-4 py-4 text-sm text-slate-700">
-                  {item.pessoa_nome}
-                </td>
-
-                <td className="px-4 py-4 text-sm text-slate-700">
-                  {item.pessoa_republica || "—"}
-                </td>
-
-                <td className="px-4 py-4">
+                <td>
                   <StatusBadge variant={getStatusVariant(item.status)}>
                     {getStatusLabel(item.status)}
                   </StatusBadge>
                 </td>
 
-                <td className="px-4 py-4">
-                  <div className="flex flex-col items-end gap-2">
-                    {item.status === "em_aberto" ? (
-                      <form action={marcarEmprestimoComoDevolvido}>
-                        <input type="hidden" name="id" value={item.id} />
-                        <button
-                          type="submit"
-                          className="rounded-lg border border-emerald-200 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50"
-                        >
-                          Marcar devolvido
-                        </button>
-                      </form>
-                    ) : (
-                      <form action={reabrirEmprestimo}>
-                        <input type="hidden" name="id" value={item.id} />
-                        <button
-                          type="submit"
-                          className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                        >
-                          Reabrir
-                        </button>
-                      </form>
-                    )}
-
-                    <form action={removerEmprestimo}>
-                      <input type="hidden" name="id" value={item.id} />
-                      <button
-                        type="submit"
-                        className="rounded-lg border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
-                      >
-                        Remover
-                      </button>
-                    </form>
-                  </div>
+                <td>
+                  <ActionButtons item={item} />
                 </td>
               </tr>
             ))}
@@ -160,96 +153,79 @@ export function EmprestimosTable({
         </table>
       </div>
 
-      <div className="grid gap-4 md:hidden">
+      <div className="space-y-4 xl:hidden">
         {emprestimos.map((item) => (
           <div
             key={item.id}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4"
           >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h4 className="font-semibold text-slate-900">
-                  {item.nome_item}
-                </h4>
-                <p className="mt-1 text-sm text-slate-500">
-                  {formatarData(item.data_emprestimo)}
-                </p>
+            <div className="flex flex-col gap-4">
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <StatusBadge variant={getTipoVariant(item.tipo)}>
+                    {getTipoLabel(item.tipo)}
+                  </StatusBadge>
+                  <StatusBadge variant={getStatusVariant(item.status)}>
+                    {getStatusLabel(item.status)}
+                  </StatusBadge>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-semibold text-white">
+                    {item.nome_item}
+                  </h3>
+
+                  {item.observacao ? (
+                    <p className="mt-2 text-sm leading-6 text-zinc-400">
+                      {item.observacao}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                      Data
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-200">
+                      {formatarData(item.data_emprestimo)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                      Pessoa
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-200">{item.pessoa_nome}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                      República
+                    </p>
+                    <p className="mt-1 text-sm text-zinc-200">
+                      {item.pessoa_republica || "—"}
+                    </p>
+                  </div>
+
+                  {item.data_devolucao ? (
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+                        Devolução
+                      </p>
+                      <p className="mt-1 text-sm text-zinc-200">
+                        {formatarData(item.data_devolucao)}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
-              <StatusBadge variant={getStatusVariant(item.status)}>
-                {getStatusLabel(item.status)}
-              </StatusBadge>
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              <StatusBadge variant={getTipoVariant(item.tipo)}>
-                {getTipoLabel(item.tipo)}
-              </StatusBadge>
-            </div>
-
-            <div className="mt-4 space-y-2 text-sm text-slate-600">
-              <p>
-                <span className="font-medium text-slate-700">Pessoa:</span>{" "}
-                {item.pessoa_nome}
-              </p>
-              <p>
-                <span className="font-medium text-slate-700">República:</span>{" "}
-                {item.pessoa_republica || "—"}
-              </p>
-              {item.observacao ? (
-                <p>
-                  <span className="font-medium text-slate-700">
-                    Observação:
-                  </span>{" "}
-                  {item.observacao}
-                </p>
-              ) : null}
-              {item.data_devolucao ? (
-                <p>
-                  <span className="font-medium text-slate-700">
-                    Data de devolução:
-                  </span>{" "}
-                  {formatarData(item.data_devolucao)}
-                </p>
-              ) : null}
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {item.status === "em_aberto" ? (
-                <form action={marcarEmprestimoComoDevolvido}>
-                  <input type="hidden" name="id" value={item.id} />
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-emerald-200 px-3 py-2 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50"
-                  >
-                    Marcar devolvido
-                  </button>
-                </form>
-              ) : (
-                <form action={reabrirEmprestimo}>
-                  <input type="hidden" name="id" value={item.id} />
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Reabrir
-                  </button>
-                </form>
-              )}
-
-              <form action={removerEmprestimo}>
-                <input type="hidden" name="id" value={item.id} />
-                <button
-                  type="submit"
-                  className="rounded-lg border border-rose-200 px-3 py-2 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
-                >
-                  Remover
-                </button>
-              </form>
+              <ActionButtons item={item} />
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </>
   );
 }

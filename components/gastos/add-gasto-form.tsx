@@ -17,7 +17,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" disabled={pending} className="w-full md:w-auto">
+    <Button type="submit" size="lg" fullWidth disabled={pending}>
       {pending ? "Adicionando..." : "Adicionar gasto"}
     </Button>
   );
@@ -33,8 +33,7 @@ function hoje() {
 
 export function AddGastoForm({ moradores }: { moradores: Morador[] }) {
   const [state, formAction] = useFormState(adicionarGasto, null);
-  const formRef = useRef<HTMLFormElement>(null);
-
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [tipoDestino, setTipoDestino] = useState<"casa" | "moradores">("casa");
   const [selecionados, setSelecionados] = useState<string[]>([]);
 
@@ -55,84 +54,60 @@ export function AddGastoForm({ moradores }: { moradores: Morador[] }) {
   return (
     <form ref={formRef} action={formAction} className="space-y-5">
       {state?.error ? (
-        <div className="alert-error">{state.error}</div>
+        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
+          {state.error}
+        </div>
       ) : null}
 
       {state?.success ? (
-        <div className="alert-success">{state.success}</div>
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+          {state.success}
+        </div>
       ) : null}
 
-      <input type="hidden" name="tipo_destino" value={tipoDestino} />
-
-      <div className="form-grid">
-        <div className="form-field">
-          <label htmlFor="nome" className="form-label">
+      <div className="grid gap-5 md:grid-cols-2">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Nome do gasto
           </label>
-          <Input
-            id="nome"
-            name="nome"
-            type="text"
-            required
-            placeholder="Ex.: Uber Formatura X"
-            className="border-slate-300 focus-visible:ring-emerald-500"
-          />
+          <Input name="nome" placeholder="Ex.: Compra do mercado" required />
         </div>
 
-        <div className="form-field">
-          <label htmlFor="valor_total" className="form-label">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Valor total
           </label>
           <Input
-            id="valor_total"
             name="valor_total"
             type="number"
             step="0.01"
-            min="0.01"
+            min="0"
+            placeholder="0,00"
             required
-            className="border-slate-300 focus-visible:ring-emerald-500"
-          />
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="form-field">
-          <label htmlFor="data_gasto" className="form-label">
-            Data
-          </label>
-          <Input
-            id="data_gasto"
-            name="data_gasto"
-            type="date"
-            defaultValue={hoje()}
-            required
-            className="border-slate-300 focus-visible:ring-emerald-500"
           />
         </div>
 
-        <div className="form-field">
-          <label htmlFor="categoria" className="form-label">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">Data</label>
+          <Input name="data_gasto" type="date" defaultValue={hoje()} required />
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Categoria
           </label>
-          <Input
-            id="categoria"
-            name="categoria"
-            type="text"
-            placeholder="Ex.: Uber"
-            className="border-slate-300 focus-visible:ring-emerald-500"
-          />
+          <Input name="categoria" placeholder="Ex.: Mercado, limpeza, contas..." />
         </div>
 
-        <div className="form-field">
-          <label htmlFor="pagador_morador_id" className="form-label">
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Quem pagou
           </label>
           <select
-            id="pagador_morador_id"
             name="pagador_morador_id"
             required
+            className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
             defaultValue=""
-            className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
           >
             <option value="" disabled>
               Selecione
@@ -144,68 +119,88 @@ export function AddGastoForm({ moradores }: { moradores: Morador[] }) {
             ))}
           </select>
         </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-sm font-semibold text-zinc-200">
+            Descrição
+          </label>
+          <textarea
+            name="descricao"
+            rows={4}
+            placeholder="Detalhes adicionais do gasto"
+            className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+          />
+        </div>
       </div>
 
-      <div className="form-field">
-        <label htmlFor="descricao" className="form-label">
-          Descrição
-        </label>
-        <Input
-          id="descricao"
-          name="descricao"
-          type="text"
-          placeholder="Opcional"
-          className="border-slate-300 focus-visible:ring-emerald-500"
-        />
-      </div>
+      <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
+        <div>
+          <p className="text-sm font-semibold text-white">Pra quem pagou</p>
+          <p className="mt-1 text-sm text-zinc-400">
+            Escolha se o gasto foi para a casa inteira ou para moradores específicos.
+          </p>
+        </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <p className="mb-3 text-sm font-semibold text-slate-800">
-          Pra quem pagou
-        </p>
-
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 text-sm text-slate-700">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
             <input
               type="radio"
-              name="destino_radio"
+              name="tipo_destino"
+              value="casa"
               checked={tipoDestino === "casa"}
               onChange={() => {
                 setTipoDestino("casa");
                 setSelecionados([]);
               }}
             />
-            <span>Casa inteira</span>
+            <div>
+              <p className="text-sm font-semibold text-white">Casa inteira</p>
+              <p className="text-xs text-zinc-500">Divide para todos</p>
+            </div>
           </label>
 
-          <label className="flex items-center gap-3 text-sm text-slate-700">
+          <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
             <input
               type="radio"
-              name="destino_radio"
+              name="tipo_destino"
+              value="moradores"
               checked={tipoDestino === "moradores"}
               onChange={() => setTipoDestino("moradores")}
             />
-            <span>Moradores específicos</span>
+            <div>
+              <p className="text-sm font-semibold text-white">Moradores específicos</p>
+              <p className="text-xs text-zinc-500">Escolha manualmente</p>
+            </div>
           </label>
         </div>
 
         {tipoDestino === "moradores" ? (
-          <div className="mt-4 grid gap-2 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2">
-            {moradores.map((morador) => (
-              <label
-                key={morador.id}
-                className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm text-slate-700 hover:bg-slate-50"
-              >
-                <input
-                  type="checkbox"
-                  name="destino_moradores"
-                  value={morador.id}
-                  checked={selecionados.includes(morador.id)}
-                  onChange={() => toggleMorador(morador.id)}
-                />
-                {morador.nome}
-              </label>
-            ))}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {moradores.map((morador) => {
+              const checked = selecionados.includes(morador.id);
+
+              return (
+                <label
+                  key={morador.id}
+                  className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 ${
+                    checked
+                      ? "border-amber-500/30 bg-amber-500/10"
+                      : "border-zinc-800 bg-zinc-950/70"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    name="destinatarios"
+                    value={morador.id}
+                    checked={checked}
+                    onChange={() => toggleMorador(morador.id)}
+                  />
+                  <span className="text-sm font-medium text-zinc-200">
+                    {morador.nome}
+                  </span>
+                </label>
+              );
+            })}
           </div>
         ) : null}
       </div>

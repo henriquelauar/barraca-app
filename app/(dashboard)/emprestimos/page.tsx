@@ -9,28 +9,25 @@ export default async function EmprestimosPage() {
   const data = await listarEmprestimosPagina();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       <PageHeader
         title="Empréstimos"
-        description="Controle de itens que a casa emprestou ou pegou emprestado."
+        description="Controle de itens emprestados e pegos emprestados pela casa."
         action={<EmprestimoFormModal />}
       />
 
       <SectionCard
-        title="Em aberto"
-        description="Itens que ainda não foram devolvidos."
+        title="Empréstimos em aberto"
+        description="Itens que ainda precisam ser devolvidos ou recebidos de volta."
       >
         <EmprestimosTable emprestimos={data.emAberto} variant="em_aberto" />
       </SectionCard>
 
       <SectionCard
-        title="Histórico de devolvidos"
-        description="Itens já devolvidos, preservando o histórico."
+        title="Empréstimos devolvidos"
+        description="Histórico de empréstimos já encerrados."
       >
-        <EmprestimosTable
-          emprestimos={data.devolvidos}
-          variant="devolvidos"
-        />
+        <EmprestimosTable emprestimos={data.devolvidos} variant="devolvidos" />
       </SectionCard>
     </div>
   );

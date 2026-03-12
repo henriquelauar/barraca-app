@@ -17,7 +17,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button type="submit" disabled={pending} className="w-full md:w-auto">
+    <Button type="submit" size="lg" fullWidth disabled={pending}>
       {pending ? "Registrando..." : "Registrar pagamento"}
     </Button>
   );
@@ -33,7 +33,7 @@ function hoje() {
 
 export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
   const [state, formAction] = useFormState(registrarPagamento, null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
 
   useEffect(() => {
     if (state?.success) {
@@ -43,22 +43,28 @@ export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
 
   return (
     <form ref={formRef} action={formAction} className="space-y-5">
-      {state?.error ? <div className="alert-error">{state.error}</div> : null}
-      {state?.success ? (
-        <div className="alert-success">{state.success}</div>
+      {state?.error ? (
+        <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
+          {state.error}
+        </div>
       ) : null}
 
-      <div className="form-grid">
-        <div className="form-field">
-          <label htmlFor="de_morador_id" className="form-label">
+      {state?.success ? (
+        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+          {state.success}
+        </div>
+      ) : null}
+
+      <div className="grid gap-5 md:grid-cols-2">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Quem pagou
           </label>
           <select
-            id="de_morador_id"
-            name="de_morador_id"
+            name="pagador_morador_id"
             required
             defaultValue=""
-            className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
           >
             <option value="" disabled>
               Selecione
@@ -71,16 +77,15 @@ export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
           </select>
         </div>
 
-        <div className="form-field">
-          <label htmlFor="para_morador_id" className="form-label">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">
             Quem recebeu
           </label>
           <select
-            id="para_morador_id"
-            name="para_morador_id"
+            name="recebedor_morador_id"
             required
             defaultValue=""
-            className="flex h-10 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
           >
             <option value="" disabled>
               Selecione
@@ -92,50 +97,40 @@ export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
             ))}
           </select>
         </div>
-      </div>
 
-      <div className="form-grid">
-        <div className="form-field">
-          <label htmlFor="valor" className="form-label">
-            Valor
-          </label>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">Valor</label>
           <Input
-            id="valor"
             name="valor"
             type="number"
             step="0.01"
-            min="0.01"
+            min="0"
+            placeholder="0,00"
             required
-            className="border-slate-300 focus-visible:ring-emerald-500"
           />
         </div>
 
-        <div className="form-field">
-          <label htmlFor="data_pagamento" className="form-label">
-            Data
-          </label>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-zinc-200">Data</label>
           <Input
-            id="data_pagamento"
             name="data_pagamento"
             type="date"
             defaultValue={hoje()}
             required
-            className="border-slate-300 focus-visible:ring-emerald-500"
           />
         </div>
-      </div>
 
-      <div className="form-field">
-        <label htmlFor="observacao" className="form-label">
-          Observação
-        </label>
-        <Input
-          id="observacao"
-          name="observacao"
-          type="text"
-          placeholder="Opcional"
-          className="border-slate-300 focus-visible:ring-emerald-500"
-        />
+        <div className="space-y-2 md:col-span-2">
+          <label className="text-sm font-semibold text-zinc-200">
+            Observação
+          </label>
+          <textarea
+            name="observacao"
+            rows={4}
+            placeholder="Detalhes adicionais do pagamento"
+            className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+          />
+        </div>
       </div>
 
       <SubmitButton />

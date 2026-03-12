@@ -50,32 +50,31 @@ export function SemanaSelector({
   const ehSemanaAtual = inicioSemana === semanaAtualInicio;
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => irParaSemana(anteriorSemana)}
-      >
-        ← Semana anterior
-      </Button>
-
-      <div className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700">
-        {formatarPeriodoSemana(inicioSemana)}
+    <div className="flex w-full flex-col gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+          Semana em exibição
+        </p>
+        <p className="text-sm font-semibold text-white sm:text-base">
+          {formatarPeriodoSemana(inicioSemana)}
+        </p>
       </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => irParaSemana(proximaSemana)}
-      >
-        Próxima semana →
-      </Button>
-
-      {!ehSemanaAtual ? (
-        <Button type="button" onClick={irParaSemanaAtual}>
-          Voltar para a atual
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button variant="outline" onClick={() => irParaSemana(anteriorSemana)}>
+          ← Semana anterior
         </Button>
-      ) : null}
+
+        {!ehSemanaAtual ? (
+          <Button variant="ghost" onClick={irParaSemanaAtual}>
+            Semana atual
+          </Button>
+        ) : null}
+
+        <Button variant="outline" onClick={() => irParaSemana(proximaSemana)}>
+          Próxima semana →
+        </Button>
+      </div>
     </div>
   );
 }

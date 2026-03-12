@@ -10,12 +10,16 @@ type StatusBadgeProps = {
   variant?: StatusBadgeVariant;
 };
 
+function cn(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
 const variants: Record<StatusBadgeVariant, string> = {
-  success: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
-  warning: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
-  danger: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
-  neutral: "bg-slate-100 text-slate-700 ring-1 ring-slate-200",
-  info: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+  success: "border-emerald-500/20 bg-emerald-500/10 text-emerald-300",
+  warning: "border-amber-500/20 bg-amber-500/10 text-amber-300",
+  danger: "border-rose-500/20 bg-rose-500/10 text-rose-300",
+  neutral: "border-zinc-700 bg-zinc-800 text-zinc-300",
+  info: "border-sky-500/20 bg-sky-500/10 text-sky-300",
 };
 
 export function StatusBadge({
@@ -24,7 +28,10 @@ export function StatusBadge({
 }: StatusBadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${variants[variant]}`}
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold",
+        variants[variant]
+      )}
     >
       {children}
     </span>

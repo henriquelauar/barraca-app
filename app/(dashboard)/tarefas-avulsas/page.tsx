@@ -9,23 +9,23 @@ export default async function Page() {
   const data = await listarTarefasAvulsasPagina();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       <PageHeader
         title="Tarefas avulsas"
-        description="Controle de tarefas pontuais da casa."
+        description="Tarefas pontuais da casa com controle de prazo, responsável e status."
         action={<TarefaAvulsaFormModal moradores={data.moradores} />}
       />
 
       <SectionCard
         title="Tarefas em aberto"
-        description="Tarefas pendentes ou em andamento."
+        description="Pendências da casa que ainda exigem ação."
       >
         <TarefasAvulsasTable tarefas={data.abertas} variant="abertas" />
       </SectionCard>
 
       <SectionCard
-        title="Histórico de concluídas"
-        description="Tarefas finalizadas, preservando o histórico."
+        title="Tarefas concluídas"
+        description="Histórico recente das tarefas já encerradas."
       >
         <TarefasAvulsasTable tarefas={data.concluidas} variant="concluidas" />
       </SectionCard>
