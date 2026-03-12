@@ -492,3 +492,11 @@ export async function removerEvento(formData: FormData): Promise<ActionState> {
     message: "Evento removido com sucesso.",
   };
 }
+
+export async function atualizarPresencaEventoSubmit(formData: FormData): Promise<void> {
+  await atualizarPresencaEvento(formData);
+}
+
+export async function removerEventoSubmit(formData: FormData): Promise<void> {
+  await removerEvento(formData);
+}

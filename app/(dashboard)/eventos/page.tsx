@@ -17,6 +17,7 @@ export default async function EventosPage() {
         action={<EventoFormModal />}
       />
 
+
       <SectionCard
         title="Calendário mensal"
         description="Visual mensal dos eventos cadastrados."

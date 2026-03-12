@@ -1,12 +1,22 @@
 "use client";
 
-import { atualizarPresencaEvento, removerEvento } from "@/lib/actions/eventos";
+import {
+  atualizarPresencaEventoSubmit,
+  removerEventoSubmit,
+} from "@/lib/actions/eventos";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-type Morador = {
-  id: string;
-  nome: string;
-};
+type Morador =
+  | {
+      id: string;
+      nome: string;
+    }
+  | {
+      id: string;
+      nome: string;
+    }[]
+  | null
+  | undefined;
 
 type Presenca = {
   id: string;
@@ -14,7 +24,7 @@ type Presenca = {
   status: "pendente" | "vai" | "nao_vai";
   respondido_em?: string | null;
   observacao?: string | null;
-  morador?: Morador | Morador[] | null;
+  morador?: Morador;
 };
 
 type EventoItem = {
@@ -25,7 +35,7 @@ type EventoItem = {
   local?: string | null;
   data_inicio: string;
   data_fim?: string | null;
-  presencas?: Presenca[];
+  presencas?: Presenca[] | null;
 };
 
 type Variant = "proximos" | "passados";
@@ -56,14 +66,14 @@ function getTipoLabel(tipo: string) {
   switch (tipo) {
     case "social":
       return "Social";
-    case "formatura":
-      return "Formatura";
+    case "manutencao":
+      return "Manutenção";
     case "reuniao":
       return "Reunião";
-    case "escolha":
-      return "Escolha";
-    case "almoco":
-      return "Almoço";
+    case "financeiro":
+      return "Financeiro";
+    case "limpeza":
+      return "Limpeza";
     case "aniversario":
       return "Aniversário";
     default:
@@ -97,13 +107,15 @@ function getPresencaLabel(status: Presenca["status"]) {
   }
 }
 
-function extrairMorador(morador?: Morador | Morador[] | null) {
+function extrairMorador(morador?: Morador) {
   if (!morador) return null;
   return Array.isArray(morador) ? morador[0] ?? null : morador;
 }
 
-function resumirPresencas(presencas: Presenca[] = []) {
-  return presencas.reduce(
+function resumirPresencas(presencas?: Presenca[] | null) {
+  const lista = presencas ?? [];
+
+  return lista.reduce(
     (acc, item) => {
       if (item.status === "vai") acc.vai += 1;
       if (item.status === "nao_vai") acc.naoVao += 1;
@@ -130,7 +142,7 @@ function PresenceButton({
   label: string;
 }) {
   return (
-    <form action={atualizarPresencaEvento}>
+    <form action={atualizarPresencaEventoSubmit}>
       <input type="hidden" name="evento_id" value={eventoId} />
       <input type="hidden" name="morador_id" value={moradorId} />
       <button
@@ -184,7 +196,7 @@ export function EventosTable({
           </thead>
           <tbody>
             {eventos.map((evento) => {
-              const resumo = resumirPresencas(evento.presencas || []);
+              const resumo = resumirPresencas(evento.presencas);
 
               return (
                 <tr key={evento.id}>
@@ -220,7 +232,7 @@ export function EventosTable({
                   </td>
 
                   <td>
-                    <form action={removerEvento}>
+                    <form action={removerEventoSubmit}>
                       <input type="hidden" name="id" value={evento.id} />
                       <button
                         type="submit"
@@ -239,7 +251,8 @@ export function EventosTable({
 
       <div className="space-y-4 xl:hidden">
         {eventos.map((evento) => {
-          const resumo = resumirPresencas(evento.presencas || []);
+          const resumo = resumirPresencas(evento.presencas);
+          const presencas = evento.presencas ?? [];
 
           return (
             <div
@@ -296,14 +309,14 @@ export function EventosTable({
                   </div>
                 </div>
 
-                {variant === "proximos" && (evento.presencas?.length || 0) > 0 ? (
+                {variant === "proximos" && presencas.length > 0 ? (
                   <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                     <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
                       Presenças
                     </p>
 
                     <div className="space-y-3">
-                      {evento.presencas?.map((presenca) => {
+                      {presencas.map((presenca) => {
                         const morador = extrairMorador(presenca.morador);
 
                         return (
@@ -351,7 +364,7 @@ export function EventosTable({
                   </div>
                 ) : null}
 
-                <form action={removerEvento}>
+                <form action={removerEventoSubmit}>
                   <input type="hidden" name="id" value={evento.id} />
                   <button
                     type="submit"
