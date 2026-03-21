@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect} from "react";
 import {
   atualizarContasFixasCaixinha,
   ContaFixaCaixinha,
@@ -11,16 +11,25 @@ import { Input } from "@/components/ui/input";
 type EditFixedExpensesFormProps = {
   contas: ContaFixaCaixinha[];
   mesReferencia: string;
+  onSuccess?: () => void;
 };
+
 
 export function EditFixedExpensesForm({
   contas,
   mesReferencia,
+  onSuccess,
 }: EditFixedExpensesFormProps) {
   const [state, formAction, pending] = useActionState(
     atualizarContasFixasCaixinha,
     null
   );
+  
+  useEffect(() => {
+    if (state?.success) {
+      onSuccess?.();
+    }
+  }, [state, onSuccess]);
 
   return (
     <form action={formAction} className="space-y-4">

@@ -45,7 +45,7 @@ export function CaixinhaPageActions({
         title="Editar contas fixas"
         description="Esses valores serão salvos somente neste mês."
       >
-        <EditFixedExpensesForm contas={contas} mesReferencia={mesReferencia} />
+        <EditFixedExpensesForm contas={contas} mesReferencia={mesReferencia}onSuccess={() => setFixedModalOpen(false)} />
       </ModalShell>
 
       <ModalShell
@@ -54,7 +54,7 @@ export function CaixinhaPageActions({
         title="Nova compra variável"
         description="Esse lançamento será salvo somente neste mês."
       >
-        <AddCompraForm moradores={moradores} mesReferencia={mesReferencia} />
+        <AddCompraForm moradores={moradores} mesReferencia={mesReferencia} onSuccess={() => setCompraModalOpen(false)} />
       </ModalShell>
     </>
   );

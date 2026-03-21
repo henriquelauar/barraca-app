@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useEffect, useState, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import {
   criarEvento,
   type ActionState,
@@ -51,7 +51,7 @@ function SubmitButton() {
 
 export function EventoFormModal() {
   const [open, setOpen] = useState(false);
-  const [state, formAction] = useFormState(criarEvento, initialState);
+  const [state, formAction] = useActionState(criarEvento, initialState);
 
   useEffect(() => {
     if (state?.success) {

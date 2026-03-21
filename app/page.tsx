@@ -29,10 +29,10 @@ export default function HomePage() {
               </Link>
 
               <Link
-                href="/dashboard"
+                href="/home"
                 className="inline-flex h-12 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-950 px-6 text-sm font-semibold text-zinc-100 hover:border-zinc-600 hover:bg-zinc-900"
               >
-                Acessar dashboard
+                Acessar home
               </Link>
             </div>
           </div>

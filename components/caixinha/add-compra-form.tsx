@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   adicionarCompraCaixinha,
   MoradorCaixinha,
@@ -11,12 +11,23 @@ import { Input } from "@/components/ui/input";
 type AddCompraFormProps = {
   moradores: MoradorCaixinha[];
   mesReferencia: string;
+  onSuccess?: () => void;
 };
 
-export function AddCompraForm({ moradores, mesReferencia }: AddCompraFormProps) {
+export function AddCompraForm({
+  moradores,
+  mesReferencia,
+  onSuccess,
+}: AddCompraFormProps) {
   const [state, formAction, pending] = useActionState(adicionarCompraCaixinha, null);
   const [quemPagouTipo, setQuemPagouTipo] = useState<"morador" | "casa">("morador");
   const [selecionados, setSelecionados] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (state?.success) {
+      onSuccess?.();
+    }
+  }, [state, onSuccess]);
 
   function toggleMorador(id: string) {
     setSelecionados((prev) =>

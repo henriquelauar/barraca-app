@@ -212,7 +212,7 @@ export default async function CaixinhaPage() {
           </div>
         ) : (
           <>
-            <div className="hidden lg:block">
+           <div className="hidden lg:block rounded-xl border border-zinc-800 bg-zinc-950/60 px-3 py-2.5">
               <CompactTable
                 headers={["Compra", "Pagador", "Divisão", "Valor", "Ações"]}
                 minWidth="min-w-[860px]"
@@ -334,7 +334,7 @@ export default async function CaixinhaPage() {
                     <td className="px-2.5 py-2 text-zinc-300">
                       {formatarMoeda(item.reajuste)}
                     </td>
-                    <td className="px-2.5 py-2 font-semibold text-white">
+                    <td className="px-2.5 py-2 font-semibold text-green-600">
                       {formatarMoeda(item.valor_final)}
                     </td>
                   </tr>
@@ -373,7 +373,7 @@ export default async function CaixinhaPage() {
                       <p className="text-[10px] uppercase tracking-wide text-zinc-500">
                         Saldo
                       </p>
-                      <p className="mt-1 text-sm font-semibold text-white">
+                      <p className="mt-1 text-sm font-semibold text-green-600">
                         {formatarMoeda(item.valor_final)}
                       </p>
                     </div>

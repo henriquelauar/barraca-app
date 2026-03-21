@@ -271,56 +271,10 @@ export function EventosTable({
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    <StatusBadge variant="success">{resumo.vai} vao</StatusBadge>
-                    <StatusBadge variant="danger">
-                      {resumo.naoVao} nao vao
-                    </StatusBadge>
-                    <StatusBadge variant="warning">
-                      {resumo.pendentes} pendentes
-                    </StatusBadge>
-                  </div>
+
                 </div>
 
-                {variant === "proximos" && minhaPresenca ? (
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                      Sua presença
-                    </p>
-
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
-                      <div className="space-y-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="text-sm font-semibold text-white">Você</p>
-                          <StatusBadge variant={getPresencaVariant(minhaPresenca.status)}>
-                            {getPresencaLabel(minhaPresenca.status)}
-                          </StatusBadge>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2">
-                          <PresenceButton
-                            eventoId={evento.id}
-                            moradorId={minhaPresenca.morador_id}
-                            status="vai"
-                            label="Vai"
-                          />
-                          <PresenceButton
-                            eventoId={evento.id}
-                            moradorId={minhaPresenca.morador_id}
-                            status="nao_vai"
-                            label="Nao vai"
-                          />
-                          <PresenceButton
-                            eventoId={evento.id}
-                            moradorId={minhaPresenca.morador_id}
-                            status="pendente"
-                            label="Pendente"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
+               
 
                 <form action={removerEventoSubmit}>
                   <input type="hidden" name="id" value={evento.id} />
