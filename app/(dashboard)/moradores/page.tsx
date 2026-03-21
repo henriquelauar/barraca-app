@@ -28,65 +28,6 @@ export default async function MoradoresPage() {
         description="Cadastro e visualização dos moradores da casa, incluindo acesso ao sistema e status de atividade."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Total"
-          value={totalMoradores}
-          helper="Moradores cadastrados"
-        />
-        <StatCard
-          title="Ativos"
-          value={ativos}
-          helper="Moradores em operação"
-        />
-        <StatCard
-          title="Com acesso"
-          value={comAcesso}
-          helper="Contas vinculadas ao sistema"
-        />
-        <StatCard
-          title="Sem acesso"
-          value={semAcesso}
-          helper="Ainda sem conta vinculada"
-        />
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard
-          title="Adicionar morador"
-          description="Cadastre um novo morador no sistema."
-        >
-          <AddMoradorForm />
-        </SectionCard>
-
-        <SectionCard
-          title="Resumo rápido"
-          description="Leitura rápida do estado atual do cadastro."
-        >
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-                Cadastros ativos
-              </p>
-              <p className="mt-2 text-2xl font-bold text-white">{ativos}</p>
-              <p className="mt-2 text-sm text-zinc-400">
-                Moradores com participação ativa na rotina da casa.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
-                Acesso ao sistema
-              </p>
-              <p className="mt-2 text-2xl font-bold text-white">{comAcesso}</p>
-              <p className="mt-2 text-sm text-zinc-400">
-                Quem já consegue usar o painel diretamente.
-              </p>
-            </div>
-          </div>
-        </SectionCard>
-      </div>
-
       <SectionCard
         title="Lista de moradores"
         description="No desktop a leitura fica em tabela; no celular, em cards."

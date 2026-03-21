@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { adicionarGasto } from "@/lib/actions/gastos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,45 +10,53 @@ type Morador = {
   nome: string;
   email: string;
   ativo: boolean;
+  user_id?: string | null;
 };
 
 function SubmitButton() {
-  const { pending } = useFormStatus();
-
   return (
-    <Button type="submit" size="lg" fullWidth disabled={pending}>
-      {pending ? "Adicionando..." : "Adicionar gasto"}
+    <Button type="submit" size="lg" fullWidth>
+      Salvar gasto
     </Button>
   );
 }
 
-function hoje() {
-  const now = new Date();
-  const ano = now.getFullYear();
-  const mes = String(now.getMonth() + 1).padStart(2, "0");
-  const dia = String(now.getDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
-}
+type AddGastoFormProps = {
+  moradores: Morador[];
+  currentMoradorId: string | null;
+  currentMoradorNome: string | null;
+};
 
-export function AddGastoForm({ moradores }: { moradores: Morador[] }) {
-  const [state, formAction] = useFormState(adicionarGasto, null);
+export function AddGastoForm({
+  moradores,
+  currentMoradorId,
+  currentMoradorNome,
+}: AddGastoFormProps) {
+  const [state, formAction] = useActionState(adicionarGasto, null);
   const formRef = useRef<HTMLFormElement | null>(null);
-  const [tipoDestino, setTipoDestino] = useState<"casa" | "moradores">("casa");
+  const [participou, setParticipou] = useState(true);
   const [selecionados, setSelecionados] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (state?.success) {
-      formRef.current?.reset();
-      setTipoDestino("casa");
-      setSelecionados([]);
-    }
-  }, [state]);
+  const moradoresDivisao = useMemo(
+    () => moradores.filter((morador) => morador.id !== currentMoradorId),
+    [moradores, currentMoradorId]
+  );
 
   function toggleMorador(id: string) {
     setSelecionados((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   }
+
+  useEffect(() => {
+    if (state?.success) {
+      formRef.current?.reset();
+      setParticipou(true);
+      setSelecionados([]);
+    }
+  }, [state]);
+
+  const totalParticipantes = selecionados.length + (participou ? 1 : 0);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-5">
@@ -65,144 +72,105 @@ export function AddGastoForm({ moradores }: { moradores: Morador[] }) {
         </div>
       ) : null}
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-zinc-200">
-            Nome do gasto
-          </label>
-          <Input name="nome" placeholder="Ex.: Compra do mercado" required />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-zinc-200">
-            Valor total
-          </label>
-          <Input
-            name="valor_total"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="0,00"
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-zinc-200">Data</label>
-          <Input name="data_gasto" type="date" defaultValue={hoje()} required />
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-sm font-semibold text-zinc-200">
-            Categoria
-          </label>
-          <Input name="categoria" placeholder="Ex.: Mercado, limpeza, contas..." />
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-semibold text-zinc-200">
-            Quem pagou
-          </label>
-          <select
-            name="pagador_morador_id"
-            required
-            className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-            defaultValue=""
-          >
-            <option value="" disabled>
-              Selecione
-            </option>
-            {moradores.map((morador) => (
-              <option key={morador.id} value={morador.id}>
-                {morador.nome}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-2 md:col-span-2">
-          <label className="text-sm font-semibold text-zinc-200">
-            Descrição
-          </label>
-          <textarea
-            name="descricao"
-            rows={4}
-            placeholder="Detalhes adicionais do gasto"
-            className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
-          />
-        </div>
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-zinc-200">
+          Nome do gasto
+        </label>
+        <Input
+          name="nome"
+          placeholder="Ex.: Uber, mercado, pizza..."
+          required
+        />
       </div>
 
-      <div className="space-y-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
-        <div>
-          <p className="text-sm font-semibold text-white">Pra quem pagou</p>
-          <p className="mt-1 text-sm text-zinc-400">
-            Escolha se o gasto foi para a casa inteira ou para moradores específicos.
+      <div className="space-y-2">
+        <label className="text-sm font-semibold text-zinc-200">Valor</label>
+        <Input
+          name="valor_total"
+          type="number"
+          step="0.01"
+          min="0"
+          placeholder="0,00"
+          required
+        />
+      </div>
+
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-white">Sua participação</p>
+          <p className="text-xs text-zinc-500">
+            Marque se você também participou desse gasto.
+          </p>
+        </div>
+
+        <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4">
+          <input
+            type="checkbox"
+            checked={participou}
+            onChange={(event) => setParticipou(event.target.checked)}
+          />
+          <span className="text-sm font-medium text-zinc-200">
+            {currentMoradorNome
+              ? `${currentMoradorNome} participou`
+              : "Eu participei"}
+          </span>
+        </label>
+
+        <input
+          type="hidden"
+          name="participou"
+          value={participou ? "true" : "false"}
+        />
+      </div>
+
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-white">Dividir com</p>
+          <p className="text-xs text-zinc-500">
+            Selecione as outras pessoas que participaram do gasto.
           </p>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
-            <input
-              type="radio"
-              name="tipo_destino"
-              value="casa"
-              checked={tipoDestino === "casa"}
-              onChange={() => {
-                setTipoDestino("casa");
-                setSelecionados([]);
-              }}
-            />
-            <div>
-              <p className="text-sm font-semibold text-white">Casa inteira</p>
-              <p className="text-xs text-zinc-500">Divide para todos</p>
-            </div>
-          </label>
+          {moradoresDivisao.map((morador) => {
+            const checked = selecionados.includes(morador.id);
 
-          <label className="flex cursor-pointer items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
-            <input
-              type="radio"
-              name="tipo_destino"
-              value="moradores"
-              checked={tipoDestino === "moradores"}
-              onChange={() => setTipoDestino("moradores")}
-            />
-            <div>
-              <p className="text-sm font-semibold text-white">Moradores específicos</p>
-              <p className="text-xs text-zinc-500">Escolha manualmente</p>
-            </div>
-          </label>
+            return (
+              <label
+                key={morador.id}
+                className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 transition ${
+                  checked
+                    ? "border-amber-500/30 bg-amber-500/10"
+                    : "border-zinc-800 bg-zinc-950/70 hover:bg-zinc-900/80"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  name="destino_moradores"
+                  value={morador.id}
+                  checked={checked}
+                  onChange={() => toggleMorador(morador.id)}
+                />
+                <span className="text-sm font-medium text-zinc-200">
+                  {morador.nome}
+                </span>
+              </label>
+            );
+          })}
         </div>
+      </div>
 
-        {tipoDestino === "moradores" ? (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {moradores.map((morador) => {
-              const checked = selecionados.includes(morador.id);
-
-              return (
-                <label
-                  key={morador.id}
-                  className={`flex cursor-pointer items-center gap-3 rounded-2xl border p-4 ${
-                    checked
-                      ? "border-amber-500/30 bg-amber-500/10"
-                      : "border-zinc-800 bg-zinc-950/70"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    name="destinatarios"
-                    value={morador.id}
-                    checked={checked}
-                    onChange={() => toggleMorador(morador.id)}
-                  />
-                  <span className="text-sm font-medium text-zinc-200">
-                    {morador.nome}
-                  </span>
-                </label>
-              );
-            })}
-          </div>
-        ) : null}
+      <div className="rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4">
+        <p className="text-xs uppercase tracking-[0.16em] text-zinc-500">
+          Resumo da divisão
+        </p>
+        <p className="mt-2 text-sm text-zinc-300">
+          {totalParticipantes > 0
+            ? `Este gasto será dividido entre ${totalParticipantes} ${
+                totalParticipantes === 1 ? "pessoa" : "pessoas"
+              }.`
+            : "Selecione pelo menos uma pessoa para dividir o gasto."}
+        </p>
       </div>
 
       <SubmitButton />

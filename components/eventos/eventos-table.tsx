@@ -5,6 +5,10 @@ import {
   removerEventoSubmit,
 } from "@/lib/actions/eventos";
 import { StatusBadge } from "@/components/ui/status-badge";
+import {
+  getEventoTipoBadgeVariant,
+  getEventoTipoLabel,
+} from "@/lib/utils/eventos";
 
 type Morador =
   | {
@@ -47,40 +51,6 @@ function formatarDataHora(data: string) {
   }).format(new Date(data));
 }
 
-function getTipoVariant(tipo: string) {
-  switch (tipo) {
-    case "social":
-      return "info" as const;
-    case "manutencao":
-      return "warning" as const;
-    case "financeiro":
-      return "danger" as const;
-    case "limpeza":
-      return "success" as const;
-    default:
-      return "neutral" as const;
-  }
-}
-
-function getTipoLabel(tipo: string) {
-  switch (tipo) {
-    case "social":
-      return "Social";
-    case "manutencao":
-      return "Manutenção";
-    case "reuniao":
-      return "Reunião";
-    case "financeiro":
-      return "Financeiro";
-    case "limpeza":
-      return "Limpeza";
-    case "aniversario":
-      return "Aniversário";
-    default:
-      return "Outro";
-  }
-}
-
 function getPresencaVariant(status: Presenca["status"]) {
   switch (status) {
     case "vai":
@@ -99,7 +69,7 @@ function getPresencaLabel(status: Presenca["status"]) {
     case "vai":
       return "Vai";
     case "nao_vai":
-      return "Não vai";
+      return "Nao vai";
     case "pendente":
       return "Pendente";
     default:
@@ -166,32 +136,34 @@ function PresenceButton({
 export function EventosTable({
   eventos,
   variant,
+  moradorAtualId,
 }: {
   eventos: EventoItem[];
   variant: Variant;
+  moradorAtualId: string | null;
 }) {
   if (eventos.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-6 text-sm text-zinc-400">
         {variant === "proximos"
-          ? "Nenhum próximo evento cadastrado."
-          : "Nenhum evento passado encontrado."}
+          ? "Nenhum item futuro cadastrado."
+          : "Nenhum item passado encontrado."}
       </div>
     );
   }
 
   return (
     <>
-      <div className="hidden xl:block overflow-x-auto">
+      <div className="hidden overflow-x-auto xl:block">
         <table className="table-dark min-w-[1100px]">
           <thead>
             <tr>
-              <th>Evento</th>
+              <th>Item</th>
               <th>Tipo</th>
               <th>Data</th>
               <th>Local</th>
-              <th>Presenças</th>
-              <th>Ações</th>
+              <th>Presencas</th>
+              <th>Acoes</th>
             </tr>
           </thead>
           <tbody>
@@ -210,20 +182,20 @@ export function EventosTable({
                   </td>
 
                   <td>
-                    <StatusBadge variant={getTipoVariant(evento.tipo)}>
-                      {getTipoLabel(evento.tipo)}
+                    <StatusBadge variant={getEventoTipoBadgeVariant(evento.tipo)}>
+                      {getEventoTipoLabel(evento.tipo)}
                     </StatusBadge>
                   </td>
 
                   <td>{formatarDataHora(evento.data_inicio)}</td>
 
-                  <td>{evento.local || "Não informado"}</td>
+                  <td>{evento.local || "Nao informado"}</td>
 
                   <td>
                     <div className="flex flex-wrap gap-2">
-                      <StatusBadge variant="success">{resumo.vai} vão</StatusBadge>
+                      <StatusBadge variant="success">{resumo.vai} vao</StatusBadge>
                       <StatusBadge variant="danger">
-                        {resumo.naoVao} não vão
+                        {resumo.naoVao} nao vao
                       </StatusBadge>
                       <StatusBadge variant="warning">
                         {resumo.pendentes} pendentes
@@ -253,6 +225,7 @@ export function EventosTable({
         {eventos.map((evento) => {
           const resumo = resumirPresencas(evento.presencas);
           const presencas = evento.presencas ?? [];
+          const minhaPresenca = presencas.find((presenca) => presenca.morador_id === moradorAtualId) ?? null;
 
           return (
             <div
@@ -262,8 +235,8 @@ export function EventosTable({
               <div className="flex flex-col gap-4">
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    <StatusBadge variant={getTipoVariant(evento.tipo)}>
-                      {getTipoLabel(evento.tipo)}
+                    <StatusBadge variant={getEventoTipoBadgeVariant(evento.tipo)}>
+                      {getEventoTipoLabel(evento.tipo)}
                     </StatusBadge>
                   </div>
 
@@ -293,15 +266,15 @@ export function EventosTable({
                         Local
                       </p>
                       <p className="mt-1 text-sm text-zinc-200">
-                        {evento.local || "Não informado"}
+                        {evento.local || "Nao informado"}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <StatusBadge variant="success">{resumo.vai} vão</StatusBadge>
+                    <StatusBadge variant="success">{resumo.vai} vao</StatusBadge>
                     <StatusBadge variant="danger">
-                      {resumo.naoVao} não vão
+                      {resumo.naoVao} nao vao
                     </StatusBadge>
                     <StatusBadge variant="warning">
                       {resumo.pendentes} pendentes
@@ -309,57 +282,42 @@ export function EventosTable({
                   </div>
                 </div>
 
-                {variant === "proximos" && presencas.length > 0 ? (
+                {variant === "proximos" && minhaPresenca ? (
                   <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
                     <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-                      Presenças
+                      Sua presença
                     </p>
 
-                    <div className="space-y-3">
-                      {presencas.map((presenca) => {
-                        const morador = extrairMorador(presenca.morador);
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-white">Você</p>
+                          <StatusBadge variant={getPresencaVariant(minhaPresenca.status)}>
+                            {getPresencaLabel(minhaPresenca.status)}
+                          </StatusBadge>
+                        </div>
 
-                        return (
-                          <div
-                            key={presenca.id}
-                            className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3"
-                          >
-                            <div className="space-y-3">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-semibold text-white">
-                                  {morador?.nome || "Morador"}
-                                </p>
-                                <StatusBadge
-                                  variant={getPresencaVariant(presenca.status)}
-                                >
-                                  {getPresencaLabel(presenca.status)}
-                                </StatusBadge>
-                              </div>
-
-                              <div className="grid grid-cols-3 gap-2">
-                                <PresenceButton
-                                  eventoId={evento.id}
-                                  moradorId={presenca.morador_id}
-                                  status="vai"
-                                  label="Vai"
-                                />
-                                <PresenceButton
-                                  eventoId={evento.id}
-                                  moradorId={presenca.morador_id}
-                                  status="nao_vai"
-                                  label="Não vai"
-                                />
-                                <PresenceButton
-                                  eventoId={evento.id}
-                                  moradorId={presenca.morador_id}
-                                  status="pendente"
-                                  label="Pendente"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                        <div className="grid grid-cols-3 gap-2">
+                          <PresenceButton
+                            eventoId={evento.id}
+                            moradorId={minhaPresenca.morador_id}
+                            status="vai"
+                            label="Vai"
+                          />
+                          <PresenceButton
+                            eventoId={evento.id}
+                            moradorId={minhaPresenca.morador_id}
+                            status="nao_vai"
+                            label="Nao vai"
+                          />
+                          <PresenceButton
+                            eventoId={evento.id}
+                            moradorId={minhaPresenca.morador_id}
+                            status="pendente"
+                            label="Pendente"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : null}
@@ -370,7 +328,7 @@ export function EventosTable({
                     type="submit"
                     className="inline-flex h-10 items-center justify-center rounded-xl border border-rose-500/20 bg-rose-500/10 px-4 text-sm font-semibold text-rose-300 hover:bg-rose-500/20"
                   >
-                    Remover evento
+                    Remover item
                   </button>
                 </form>
               </div>

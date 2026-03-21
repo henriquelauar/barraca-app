@@ -7,6 +7,7 @@ import { PresencaToggle } from "@/components/eventos/presenca-toggle";
 
 type EventoPresencasCardProps = {
   evento: EventoComPresencas;
+  moradorAtualId: string | null;
 };
 
 function getStatusLabel(status: PresencaStatus) {
@@ -23,10 +24,15 @@ function getStatusVariant(status: PresencaStatus) {
 
 export function EventoPresencasCard({
   evento,
+  moradorAtualId,
 }: EventoPresencasCardProps) {
   const presencas = (evento.presencas ?? []).slice().sort((a, b) => {
-    const nomeA = Array.isArray(a.morador) ? a.morador[0]?.nome ?? "" : a.morador?.nome ?? "";
-    const nomeB = Array.isArray(b.morador) ? b.morador[0]?.nome ?? "" : b.morador?.nome ?? "";
+    const nomeA = Array.isArray(a.morador)
+      ? a.morador[0]?.nome ?? ""
+      : a.morador?.nome ?? "";
+    const nomeB = Array.isArray(b.morador)
+      ? b.morador[0]?.nome ?? ""
+      : b.morador?.nome ?? "";
     return nomeA.localeCompare(nomeB, "pt-BR");
   });
 
@@ -51,6 +57,8 @@ export function EventoPresencasCard({
           const morador = Array.isArray(presenca.morador)
             ? presenca.morador[0] ?? null
             : presenca.morador;
+
+          const podeResponder = presenca.morador_id === moradorAtualId;
 
           return (
             <div
@@ -84,11 +92,15 @@ export function EventoPresencasCard({
               </div>
 
               <div>
-                <PresencaToggle
-                  eventoId={presenca.evento_id}
-                  moradorId={presenca.morador_id}
-                  statusAtual={presenca.status}
-                />
+                {podeResponder ? (
+                  <PresencaToggle
+                    eventoId={presenca.evento_id}
+                    moradorId={presenca.morador_id}
+                    statusAtual={presenca.status}
+                  />
+                ) : (
+                  <span className="text-xs text-slate-400">Somente o próprio morador</span>
+                )}
               </div>
             </div>
           );

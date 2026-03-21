@@ -10,6 +10,7 @@ type Morador = {
   nome: string;
   email: string;
   ativo: boolean;
+  user_id?: string | null;
 };
 
 type ModalShellProps = {
@@ -48,7 +49,7 @@ function ModalShell({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60]">
+    <div className="fixed inset-0 z-[70]">
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
@@ -57,7 +58,9 @@ function ModalShell({
       <div className="absolute inset-x-0 bottom-0 top-auto max-h-[92vh] overflow-y-auto rounded-t-[28px] border border-zinc-800 bg-zinc-950 p-5 shadow-2xl md:inset-auto md:left-1/2 md:top-1/2 md:w-full md:max-w-2xl md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-3xl md:p-6">
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight text-white">{title}</h2>
+            <h2 className="text-2xl font-bold tracking-tight text-white">
+              {title}
+            </h2>
             <p className="text-sm leading-6 text-zinc-400">{description}</p>
           </div>
 
@@ -77,7 +80,17 @@ function ModalShell({
   );
 }
 
-export function GastosPageActions({ moradores }: { moradores: Morador[] }) {
+type GastosPageActionsProps = {
+  moradores: Morador[];
+  currentMoradorId: string | null;
+  currentMoradorNome: string | null;
+};
+
+export function GastosPageActions({
+  moradores,
+  currentMoradorId,
+  currentMoradorNome,
+}: GastosPageActionsProps) {
   const [gastoModalOpen, setGastoModalOpen] = useState(false);
   const [pagamentoModalOpen, setPagamentoModalOpen] = useState(false);
 
@@ -100,9 +113,13 @@ export function GastosPageActions({ moradores }: { moradores: Morador[] }) {
         open={gastoModalOpen}
         onClose={() => setGastoModalOpen(false)}
         title="Novo gasto"
-        description="Cadastre um gasto e distribua para a casa inteira ou para moradores específicos."
+        description="Informe o nome, o valor e com quem o gasto foi dividido."
       >
-        <AddGastoForm moradores={moradores} />
+        <AddGastoForm
+          moradores={moradores}
+          currentMoradorId={currentMoradorId}
+          currentMoradorNome={currentMoradorNome}
+        />
       </ModalShell>
 
       <ModalShell

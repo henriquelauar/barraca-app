@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState, useEffect, useMemo, useRef } from "react";
 import { registrarPagamento } from "@/lib/actions/gastos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,14 +10,13 @@ type Morador = {
   nome: string;
   email: string;
   ativo: boolean;
+  user_id?: string | null;
 };
 
 function SubmitButton() {
-  const { pending } = useFormStatus();
-
   return (
-    <Button type="submit" size="lg" fullWidth disabled={pending}>
-      {pending ? "Registrando..." : "Registrar pagamento"}
+    <Button type="submit" size="lg" fullWidth>
+      Registrar pagamento
     </Button>
   );
 }
@@ -31,8 +29,20 @@ function hoje() {
   return `${ano}-${mes}-${dia}`;
 }
 
-export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
-  const [state, formAction] = useFormState(registrarPagamento, null);
+type AddPagamentoFormProps = {
+  moradores: Morador[];
+  defaultDeMoradorId?: string | null;
+  defaultParaMoradorId?: string | null;
+  defaultValor?: number | null;
+};
+
+export function AddPagamentoForm({
+  moradores,
+  defaultDeMoradorId = null,
+  defaultParaMoradorId = null,
+  defaultValor = null,
+}: AddPagamentoFormProps) {
+  const [state, formAction] = useActionState(registrarPagamento, null);
   const formRef = useRef<HTMLFormElement | null>(null);
 
   useEffect(() => {
@@ -40,6 +50,11 @@ export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
       formRef.current?.reset();
     }
   }, [state]);
+
+  const valorDefault = useMemo(() => {
+    if (typeof defaultValor !== "number" || Number.isNaN(defaultValor)) return "";
+    return defaultValor.toFixed(2);
+  }, [defaultValor]);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-5">
@@ -61,9 +76,9 @@ export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
             Quem pagou
           </label>
           <select
-            name="pagador_morador_id"
+            name="de_morador_id"
             required
-            defaultValue=""
+            defaultValue={defaultDeMoradorId ?? ""}
             className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
           >
             <option value="" disabled>
@@ -79,12 +94,12 @@ export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
 
         <div className="space-y-2">
           <label className="text-sm font-semibold text-zinc-200">
-            Quem recebeu
+            Para quem
           </label>
           <select
-            name="recebedor_morador_id"
+            name="para_morador_id"
             required
-            defaultValue=""
+            defaultValue={defaultParaMoradorId ?? ""}
             className="h-11 w-full rounded-xl border border-zinc-700 bg-zinc-950 px-4 text-sm text-zinc-100 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
           >
             <option value="" disabled>
@@ -107,6 +122,7 @@ export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
             min="0"
             placeholder="0,00"
             required
+            defaultValue={valorDefault}
           />
         </div>
 
@@ -124,11 +140,9 @@ export function AddPagamentoForm({ moradores }: { moradores: Morador[] }) {
           <label className="text-sm font-semibold text-zinc-200">
             Observação
           </label>
-          <textarea
+          <Input
             name="observacao"
-            rows={4}
-            placeholder="Detalhes adicionais do pagamento"
-            className="w-full rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+            placeholder="Ex.: acerto do Uber de sábado"
           />
         </div>
       </div>

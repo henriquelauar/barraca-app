@@ -439,7 +439,7 @@ export async function marcarTarefaStatus(
     .from("moradores")
     .select("id")
     .eq("user_id", user.id)
-    .maybeSingle();
+    .maybeSingle()
 
   if (moradorError) {
     return { error: moradorError.message };

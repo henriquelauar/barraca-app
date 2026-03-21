@@ -33,8 +33,8 @@ export async function listarMoradores() {
 
   const { data, error } = await supabase
     .from("moradores")
-    .select("id, user_id, nome, email, ativo, criado_em")
-    .order("nome", { ascending: true });
+    .select("id, user_id, nome, email, ativo, criado_em, ordem_exibicao")
+    .order("ordem_exibicao", { ascending: true })
 
   if (error) {
     console.error("Erro ao listar moradores:", error);

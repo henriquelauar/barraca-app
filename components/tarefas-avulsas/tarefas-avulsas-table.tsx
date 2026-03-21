@@ -14,8 +14,6 @@ function getStatusLabel(status: TarefaAvulsa["status"]) {
   switch (status) {
     case "pendente":
       return "Pendente";
-    case "em_andamento":
-      return "Em andamento";
     case "concluida":
       return "Concluída";
     default:
@@ -27,8 +25,6 @@ function getStatusVariant(status: TarefaAvulsa["status"]) {
   switch (status) {
     case "pendente":
       return "warning" as const;
-    case "em_andamento":
-      return "info" as const;
     case "concluida":
       return "success" as const;
     default:
@@ -101,19 +97,6 @@ function EmptyState({ variant }: { variant: "abertas" | "concluidas" }) {
 function ActionButtons({ tarefa }: { tarefa: TarefaAvulsa }) {
   return (
     <div className="flex flex-wrap gap-2">
-      {tarefa.status !== "em_andamento" ? (
-        <form action={atualizarStatusTarefaAvulsa}>
-          <input type="hidden" name="id" value={tarefa.id} />
-          <button
-            type="submit"
-            name="status"
-            value="em_andamento"
-            className="inline-flex h-9 items-center justify-center rounded-xl border border-sky-500/20 bg-sky-500/10 px-3 text-sm font-semibold text-sky-300 hover:bg-sky-500/20"
-          >
-            Em andamento
-          </button>
-        </form>
-      ) : null}
 
       {tarefa.status !== "concluida" ? (
         <form action={atualizarStatusTarefaAvulsa}>

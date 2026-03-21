@@ -1,5 +1,11 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import {
+  getEventoTipoCalendarClass,
+  getEventoTipoLabel,
+} from "@/lib/utils/eventos";
+
 type EventoCalendarItem = {
   id: string;
   titulo: string;
@@ -36,31 +42,16 @@ function formatDateTime(dateString: string) {
   }).format(new Date(dateString));
 }
 
-function getTipoClass(tipo: string) {
-  switch (tipo) {
-    case "social":
-      return "border-sky-500/20 bg-sky-500/10 text-sky-300";
-    case "formatura":
-      return "border-amber-500/20 bg-amber-500/10 text-amber-300";
-    case "reuniao":
-      return "border-zinc-700 bg-zinc-800 text-zinc-300";
-    case "escolha":
-      return "border-rose-500/20 bg-rose-500/10 text-rose-300";
-    case "almoco":
-      return "border-emerald-500/20 bg-emerald-500/10 text-emerald-300";
-    case "aniversario":
-      return "border-fuchsia-500/20 bg-fuchsia-500/10 text-fuchsia-300";
-    default:
-      return "border-zinc-700 bg-zinc-800 text-zinc-300";
-  }
-}
-
 function startOfMonth(date: Date) {
   return new Date(date.getFullYear(), date.getMonth(), 1);
 }
 
 function endOfMonth(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+}
+
+function addMonths(date: Date, amount: number) {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1);
 }
 
 function startCalendar(date: Date) {
@@ -93,45 +84,93 @@ function sameDate(a: Date, b: Date) {
   );
 }
 
+function getMesInicial(eventos: EventoCalendarItem[]) {
+  if (eventos.length === 0) {
+    return startOfMonth(new Date());
+  }
+
+  const hoje = new Date();
+  const inicioMesAtual = startOfMonth(hoje);
+  const fimMesAtual = endOfMonth(hoje);
+
+  const temEventoNoMesAtual = eventos.some((evento) => {
+    const data = new Date(evento.data_inicio);
+    return data >= inicioMesAtual && data <= fimMesAtual;
+  });
+
+  if (temEventoNoMesAtual) {
+    return inicioMesAtual;
+  }
+
+  return startOfMonth(new Date(eventos[0].data_inicio));
+}
+
 export function EventoCalendar({
   eventos,
 }: {
   eventos: EventoCalendarItem[];
 }) {
+  const [mesAtual, setMesAtual] = useState(() => getMesInicial(eventos));
   const hoje = new Date();
-  const baseDate =
-    eventos.length > 0 ? new Date(eventos[0].data_inicio) : new Date();
 
-  const monthStart = startOfMonth(baseDate);
-  const monthEnd = endOfMonth(baseDate);
-  const calendarDays = buildCalendarDays(baseDate);
+  const calendarDays = useMemo(() => buildCalendarDays(mesAtual), [mesAtual]);
 
-  const eventosNoMes = eventos
-    .filter((evento) => {
-      const data = new Date(evento.data_inicio);
-      return data >= monthStart && data <= monthEnd;
-    })
-    .sort(
-      (a, b) =>
-        new Date(a.data_inicio).getTime() - new Date(b.data_inicio).getTime()
-    );
+  const eventosNoMes = useMemo(
+    () =>
+      eventos
+        .filter((evento) => {
+          const data = new Date(evento.data_inicio);
+          return (
+            data.getFullYear() === mesAtual.getFullYear() &&
+            data.getMonth() === mesAtual.getMonth()
+          );
+        })
+        .sort(
+          (a, b) =>
+            new Date(a.data_inicio).getTime() - new Date(b.data_inicio).getTime()
+        ),
+    [eventos, mesAtual]
+  );
 
-  const diasSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+  const diasSemana = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"];
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-            Mês exibido
+            Mes exibido
           </p>
-          <h3 className="mt-1 text-lg font-semibold text-white capitalize">
-            {getMonthLabel(baseDate)}
+          <h3 className="mt-1 text-lg font-semibold capitalize text-white">
+            {getMonthLabel(mesAtual)}
           </h3>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-2 text-sm text-zinc-400">
-          {eventosNoMes.length} evento(s) no mês
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setMesAtual((current) => addMonths(current, -1))}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
+          >
+            Mes anterior
+          </button>
+          <button
+            type="button"
+            onClick={() => setMesAtual(startOfMonth(new Date()))}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
+          >
+            Mes atual
+          </button>
+          <button
+            type="button"
+            onClick={() => setMesAtual((current) => addMonths(current, 1))}
+            className="inline-flex h-10 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 px-4 text-sm font-semibold text-zinc-100 hover:bg-zinc-800"
+          >
+            Proximo mes
+          </button>
+          <div className="rounded-xl border border-zinc-800 bg-zinc-950/70 px-4 py-2 text-sm text-zinc-400">
+            {eventosNoMes.length} item(ns) no mes
+          </div>
         </div>
       </div>
 
@@ -147,7 +186,7 @@ export function EventoCalendar({
           ))}
 
           {calendarDays.map((day, index) => {
-            const isCurrentMonth = day.getMonth() === baseDate.getMonth();
+            const isCurrentMonth = day.getMonth() === mesAtual.getMonth();
             const isToday = sameDate(day, hoje);
 
             const eventosDia = eventosNoMes.filter((evento) =>
@@ -157,7 +196,7 @@ export function EventoCalendar({
             return (
               <div
                 key={`${day.toISOString()}-${index}`}
-                className={`min-h-[150px] border-r border-b border-zinc-800 p-3 align-top last:border-r-0 ${
+                className={`min-h-[150px] border-b border-r border-zinc-800 p-3 align-top last:border-r-0 ${
                   isCurrentMonth ? "bg-zinc-950/50" : "bg-zinc-950/20"
                 }`}
               >
@@ -179,7 +218,7 @@ export function EventoCalendar({
                   {eventosDia.map((evento) => (
                     <div
                       key={evento.id}
-                      className={`rounded-xl border px-2.5 py-2 text-xs ${getTipoClass(
+                      className={`rounded-xl border px-2.5 py-2 text-xs ${getEventoTipoCalendarClass(
                         evento.tipo
                       )}`}
                     >
@@ -202,7 +241,7 @@ export function EventoCalendar({
       <div className="space-y-3 lg:hidden">
         {eventosNoMes.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-zinc-700 bg-zinc-950/60 p-5 text-sm text-zinc-400">
-            Nenhum evento neste mês.
+            Nenhum item neste mes.
           </div>
         ) : (
           eventosNoMes.map((evento) => {
@@ -226,11 +265,11 @@ export function EventoCalendar({
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap gap-2">
                       <span
-                        className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${getTipoClass(
+                        className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${getEventoTipoCalendarClass(
                           evento.tipo
                         )}`}
                       >
-                        {evento.tipo}
+                        {getEventoTipoLabel(evento.tipo)}
                       </span>
                     </div>
 

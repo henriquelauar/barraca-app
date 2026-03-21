@@ -1,10 +1,12 @@
 export type EventoTipo =
   | "social"
-  | "manutencao"
+  | "formatura"
   | "reuniao"
-  | "financeiro"
-  | "limpeza"
+  | "escolha"
+  | "almoco"
   | "aniversario"
+  | "hospedagem_republica"
+  | "aluguel_espaco_festa"
   | "outro";
 
 export type PresencaStatus = "pendente" | "vai" | "nao_vai";
@@ -54,6 +56,7 @@ export type EventosStats = {
 };
 
 export type EventosPageData = {
+  todos: EventoComPresencas[];
   proximos: EventoComPresencas[];
   passados: EventoComPresencas[];
   eventosDoMes: EventoComPresencas[];

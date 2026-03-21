@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isHoje } from "@/lib/utils/eventos";
 
 export type EventoTipo =
   | "social"
@@ -10,7 +11,10 @@ export type EventoTipo =
   | "escolha"
   | "almoco"
   | "aniversario"
-  | "outro";
+  | "hospedagem_republica"
+  | "aluguel_espaco_festa"
+  | "outro_evento"
+  | "outro_compromisso";
 
 export type PresencaStatus = "pendente" | "vai" | "nao_vai";
 
@@ -57,6 +61,7 @@ export type EventoComPresencas = {
 };
 
 export type EventosPageData = {
+  todos: EventoComPresencas[];
   proximos: EventoComPresencas[];
   passados: EventoComPresencas[];
   eventosDoMes: EventoComPresencas[];
@@ -77,7 +82,10 @@ const TIPOS_VALIDOS: EventoTipo[] = [
   "escolha",
   "almoco",
   "aniversario",
-  "outro",
+  "hospedagem_republica",
+  "aluguel_espaco_festa",
+  "outro_evento",
+  "outro_compromisso",
 ];
 
 const STATUS_VALIDOS: PresencaStatus[] = ["pendente", "vai", "nao_vai"];
@@ -121,17 +129,6 @@ function normalizarPresencas(
       morador,
     };
   });
-}
-
-function isHoje(dateStr: string) {
-  const data = new Date(dateStr);
-  const hoje = new Date();
-
-  return (
-    data.getFullYear() === hoje.getFullYear() &&
-    data.getMonth() === hoje.getMonth() &&
-    data.getDate() === hoje.getDate()
-  );
 }
 
 function validarEventoInput(input: {
@@ -224,6 +221,7 @@ export async function listarEventosPagina(): Promise<EventosPageData> {
   if (error) {
     console.error("Erro ao listar eventos:", error);
     return {
+      todos: [],
       proximos: [],
       passados: [],
       eventosDoMes: [],
@@ -280,6 +278,7 @@ export async function listarEventosPagina(): Promise<EventosPageData> {
   }, 0);
 
   return {
+    todos: eventos,
     proximos,
     passados,
     eventosDoMes,

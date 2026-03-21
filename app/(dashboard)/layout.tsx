@@ -6,13 +6,14 @@ import { usePathname } from "next/navigation";
 import { signOut } from "@/lib/actions/auth";
 
 const navItems = [
-  { name: "Dashboard", href: "/dashboard", icon: "▣" },
+  { name: "Home", href: "/home", icon: "▣" },
   { name: "Gastos", href: "/gastos", icon: "◈" },
-  { name: "Tarefas", href: "/tarefas", icon: "✓" },
-  { name: "Moradores", href: "/moradores", icon: "◎" },
-  { name: "Eventos", href: "/eventos", icon: "◌" },
+  { name: "Gerais", href: "/tarefas", icon: "✓" },
+  { name: "Tarefas", href: "/tarefas-avulsas", icon: "+" },
   { name: "Empréstimos", href: "/emprestimos", icon: "$" },
-  { name: "Tarefas avulsas", href: "/tarefas-avulsas", icon: "+" },
+  { name: "Caixinha", href: "/caixinha", icon: "$" },
+  { name: "Eventos", href: "/eventos", icon: "◌" },
+  { name: "Moradores", href: "/moradores", icon: "◎" },
 ];
 
 function cn(...classes: Array<string | false | null | undefined>) {

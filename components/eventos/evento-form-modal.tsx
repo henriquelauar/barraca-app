@@ -15,11 +15,14 @@ const initialState: ActionState = null;
 const tipos: Array<{ value: EventoTipo; label: string }> = [
   { value: "social", label: "Social" },
   { value: "formatura", label: "Formatura" },
-  { value: "reuniao", label: "Reunião" },
+  { value: "reuniao", label: "Reuniao" },
   { value: "escolha", label: "Escolha" },
-  { value: "almoco", label: "Almoço" },
-  { value: "aniversario", label: "Aniversário" },
-  { value: "outro", label: "Outro" },
+  { value: "almoco", label: "Almoco" },
+  { value: "aniversario", label: "Aniversario" },
+  { value: "hospedagem_republica", label: "Hospedagem na republica" },
+  { value: "aluguel_espaco_festa", label: "Aluguel do espaco de festa" },
+  { value: "outro_evento", label: "Outro evento" },
+  { value: "outro_compromisso", label: "Outro compromisso" },
 ];
 
 function agoraMaisUmaHora() {
@@ -92,7 +95,7 @@ export function EventoFormModal() {
                   Novo evento
                 </h2>
                 <p className="text-sm leading-6 text-zinc-400">
-                  Cadastre um evento mantendo a agenda da casa organizada.
+                  Cadastre um evento ou compromisso mantendo a agenda da casa organizada.
                 </p>
               </div>
 
@@ -102,7 +105,7 @@ export function EventoFormModal() {
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-700 bg-zinc-900 text-lg text-zinc-100 hover:bg-zinc-800"
                 aria-label="Fechar modal"
               >
-                ×
+                x
               </button>
             </div>
 
@@ -122,7 +125,7 @@ export function EventoFormModal() {
               <div className="grid gap-5 md:grid-cols-2">
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-sm font-semibold text-zinc-200">
-                    Título
+                    Titulo
                   </label>
                   <Input name="titulo" placeholder="Ex.: Churrasco da casa" required />
                 </div>
@@ -153,7 +156,7 @@ export function EventoFormModal() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-semibold text-zinc-200">
-                    Início
+                    Inicio
                   </label>
                   <Input
                     name="data_inicio"
@@ -172,7 +175,7 @@ export function EventoFormModal() {
 
                 <div className="space-y-2 md:col-span-2">
                   <label className="text-sm font-semibold text-zinc-200">
-                    Descrição
+                    Descricao
                   </label>
                   <textarea
                     name="descricao"
