@@ -36,32 +36,6 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-
-          <div className="grid gap-4">
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5">
-              <p className="text-sm font-medium text-zinc-400">Visual</p>
-              <p className="mt-2 text-xl font-semibold text-white">Dark theme completo</p>
-              <p className="mt-2 text-sm leading-6 text-zinc-500">
-                Menos poluição visual, melhor contraste e identidade mais premium.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5">
-              <p className="text-sm font-medium text-zinc-400">Mobile</p>
-              <p className="mt-2 text-xl font-semibold text-white">Uso real no celular</p>
-              <p className="mt-2 text-sm leading-6 text-zinc-500">
-                Menu lateral responsivo, cards e leitura confortável em telas pequenas.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/80 p-5">
-              <p className="text-sm font-medium text-zinc-400">Tarefas</p>
-              <p className="mt-2 text-xl font-semibold text-white">Foco na operação diária</p>
-              <p className="mt-2 text-sm leading-6 text-zinc-500">
-                Status mais visíveis, navegação semanal mais clara e separação por contexto.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </main>
