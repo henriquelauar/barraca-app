@@ -90,7 +90,7 @@ export function EventosPageContent({
   return (
     <div className="space-y-6 md:space-y-8">
       <div className="rounded-3xl border border-zinc-800 bg-zinc-950/70 p-2">
-        <div className="grid gap-2 md:grid-cols-2">
+        <div className="grid gap-2 grid-cols-2">
           <button
             type="button"
             onClick={() => setAbaAtiva("eventos")}
@@ -104,9 +104,6 @@ export function EventosPageContent({
               Aba 1
             </p>
             <p className="mt-1 text-base font-semibold">Eventos</p>
-            <p className="mt-1 text-sm opacity-80">
-              Aniversarios, formaturas e demais eventos da casa.
-            </p>
           </button>
 
           <button
@@ -122,9 +119,6 @@ export function EventosPageContent({
               Aba 2
             </p>
             <p className="mt-1 text-base font-semibold">Compromissos</p>
-            <p className="mt-1 text-sm opacity-80">
-              Hospedagem na republica e aluguel do espaco de festa.
-            </p>
           </button>
         </div>
       </div>
