@@ -32,7 +32,7 @@ export async function signIn(
     return { error: "E-mail ou senha inválidos." };
   }
 
-  redirect("/dashboard");
+  redirect("/home");
 }
 
 export async function signUp(
