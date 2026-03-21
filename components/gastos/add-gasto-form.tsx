@@ -25,17 +25,26 @@ type AddGastoFormProps = {
   moradores: Morador[];
   currentMoradorId: string | null;
   currentMoradorNome: string | null;
+  onSuccess?: () => void;
 };
 
 export function AddGastoForm({
   moradores,
   currentMoradorId,
   currentMoradorNome,
+  onSuccess,
 }: AddGastoFormProps) {
   const [state, formAction] = useActionState(adicionarGasto, null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const [participou, setParticipou] = useState(true);
   const [selecionados, setSelecionados] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (state?.success) {
+      formRef.current?.reset();
+      onSuccess?.();
+    }
+  }, [state, onSuccess]);
 
   const moradoresDivisao = useMemo(
     () => moradores.filter((morador) => morador.id !== currentMoradorId),

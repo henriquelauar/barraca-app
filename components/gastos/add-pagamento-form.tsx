@@ -15,9 +15,11 @@ type Morador = {
 
 function SubmitButton() {
   return (
-    <Button type="submit" size="lg" fullWidth>
-      Registrar pagamento
-    </Button>
+    <div className="pt-2 sm:pt-3">
+      <Button type="submit" size="lg" fullWidth>
+        Registrar pagamento
+      </Button>
+    </div>
   );
 }
 
@@ -34,6 +36,7 @@ type AddPagamentoFormProps = {
   defaultDeMoradorId?: string | null;
   defaultParaMoradorId?: string | null;
   defaultValor?: number | null;
+  onSuccess?: () => void;
 };
 
 export function AddPagamentoForm({
@@ -41,6 +44,7 @@ export function AddPagamentoForm({
   defaultDeMoradorId = null,
   defaultParaMoradorId = null,
   defaultValor = null,
+  onSuccess,
 }: AddPagamentoFormProps) {
   const [state, formAction] = useActionState(registrarPagamento, null);
   const formRef = useRef<HTMLFormElement | null>(null);
@@ -48,16 +52,19 @@ export function AddPagamentoForm({
   useEffect(() => {
     if (state?.success) {
       formRef.current?.reset();
+      onSuccess?.();
     }
-  }, [state]);
+  }, [state, onSuccess]);
 
   const valorDefault = useMemo(() => {
-    if (typeof defaultValor !== "number" || Number.isNaN(defaultValor)) return "";
+    if (typeof defaultValor !== "number" || Number.isNaN(defaultValor)) {
+      return "";
+    }
     return defaultValor.toFixed(2);
   }, [defaultValor]);
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-5">
+    <form ref={formRef} action={formAction} className="space-y-5 sm:space-y-6">
       {state?.error ? (
         <div className="rounded-2xl border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
           {state.error}
@@ -70,7 +77,7 @@ export function AddPagamentoForm({
         </div>
       ) : null}
 
-      <div className="grid gap-5 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
         <div className="space-y-2">
           <label className="text-sm font-semibold text-zinc-200">
             Quem pagou
